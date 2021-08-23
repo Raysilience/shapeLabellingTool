@@ -18,26 +18,27 @@ import MathUtil
 
 class Classifier:
     def __init__(self):
-        # self.CONVEX_TOLERANCE
-        pass
+        self.MIN_BALL_RADIUS = 20
+        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
+        self.NUM_OF_CONSECUTIVE_POINTS = 10
 
     def check_convexity_and_turning_points(self, points):
-        if len(points) < 5:
-            logging.info("length less than 5")
+        if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
+            logging.info("u'd better increase sampling frequency or draw longer lines")
             return False, None
         turning_points = []
         clockwise = None
-        for i in range(0, len(points) - 10):
+        for i in range(0, len(points) - self.NUM_OF_CONSECUTIVE_POINTS):
             if i == 0:
                 turning_points.append(points[i])
                 continue
-            vec1 = np.asarray(points[i]) - np.asarray(points[i + 4])
-            vec2 = np.asarray(points[i + 4]) - np.asarray(points[i + 9])
+            vec1 = np.asarray(points[i]) - np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS//2 - 1])
+            vec2 = np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS//2 - 1]) - np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
             vec_c = np.cross(vec1, vec2)
             cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
-            if cos_theta < math.cos(math.pi / 6):
-                if not MathUtil.within_ball(turning_points[-1], points[i+2], 15, 1):
-                    turning_points.append(points[i+4])
+            if cos_theta < self.MIN_DISTINGUISH_ANGLE :
+                if not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS//2 - 1], self.MIN_BALL_RADIUS, 1):
+                    turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS//2 - 1])
                 is_clockwise = None
                 if vec_c > 0:
                     is_clockwise = False
@@ -49,6 +50,6 @@ class Classifier:
                 if clockwise is not None and is_clockwise is not None:
                     if clockwise ^ is_clockwise:
                         return False, None
-        if not MathUtil.within_ball(turning_points[-1], points[-1], 15, 1):
+        if not MathUtil.within_ball(turning_points[-1], points[-1], self.MIN_BALL_RADIUS, 1):
             turning_points.append(points[-1])
         return True, turning_points
