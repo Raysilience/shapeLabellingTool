@@ -7,7 +7,6 @@ import math
 if __name__ == '__main__':
     # a = np.asarray((1,0))
     # b = np.asarray((0,1))
-    # print(math.cos(math.pi/18))
 
 
     LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"

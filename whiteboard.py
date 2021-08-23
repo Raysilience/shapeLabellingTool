@@ -3,6 +3,7 @@ import numpy as np
 import logging
 from classifier import Classifier
 
+
 class Whiteboard:
     def __init__(self, name='', shape=None) -> None:
         if not name: name = "Whiteboard 1"
@@ -30,6 +31,9 @@ class Whiteboard:
         elif event == cv2.EVENT_LBUTTONUP:
             if len(self.points) > 0:
                 flag, _points = self.classifier.check_convexity_and_turning_points(self.points)
+                if flag:
+                    for point in _points:
+                        cv2.circle(self.whiteboard, point, 3, (0, 0, 255), 2)
                 print("flag: {}, _points: {}".format(flag, _points))
             self.points.clear()
 
