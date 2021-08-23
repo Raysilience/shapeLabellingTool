@@ -1,3 +1,13 @@
+#!usr/bin/env python
+# coding utf-8
+"""
+@File       :test.py
+@Copyright  :CV Group
+@Date       :8/23/2021
+@Author     :Rui
+@Desc       :
+"""
+
 import cv2
 import numpy as np
 import logging
@@ -44,26 +54,3 @@ if __name__ == '__main__':
 
     whiteboard = Whiteboard()
     whiteboard.draw()
-
-    #     elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
-    #         self.points.append((x, y))
-    #         logging.debug("x: {}\ty: {}".format(x, y))
-    #         cv2.circle(self.original_img, (x, y), 2, (255, 0, 0), 2)
-
-    #     elif event == cv2.EVENT_LBUTTONUP:
-    #         if not self.points:
-    #             res = self.translate()
-    #             self._display_html(res)
-    #             logging.info(res)
-    #         else:
-    #             if is_closed(self.points):
-    #                 print(self.get_slide_paragraph())
-    #             else:
-    #                 res = self.translate()
-    #                 self._display_html(res)
-    #                 logging.info(res)
-
-    #         self.x = 0
-    #         self.y = 0
-    #         self.points = []
-    #         logging.debug("x: {}\ty: {}".format(self.x, self.y))
