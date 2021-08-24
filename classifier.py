@@ -137,8 +137,7 @@ class Classifier:
             return None
 
         vertices = np.array([intersection, points[1], points[2], points[3], points[4], points[5]], dtype=np.int32)
-        return np.array(self._approx_regular_polygon(vertices, None, None))
-        # return vertices
+        return vertices
 
 
 
