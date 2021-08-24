@@ -150,4 +150,6 @@ class Classifier:
         for p in points:
             reg_shape_at_origin.append(MathUtil.polar_to_cartesian(angle, radius))
             angle += alpha
+
+
         return reg_shape_at_origin
