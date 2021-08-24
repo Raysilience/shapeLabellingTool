@@ -34,12 +34,12 @@ def calc_intersect(p0, p1, p2, p3):
     # line 0
     a0 = p0[1] - p1[1]
     b0 = p1[0] - p0[0]
-    c0 = p0[1] * p1[0] - p0[0] * p1[1]
+    c0 = p0[0] * p1[1] - p0[1] * p1[0]
 
     # line 1
     a1 = p2[1] - p3[1]
     b1 = p3[0] - p2[0]
-    c1 = p2[1] * p3[0] - p2[0] * p3[1]
+    c1 = p2[0] * p3[1] - p2[1] * p3[0]
 
     if a0 * b1 == a1 * b0:
         return None
@@ -48,4 +48,4 @@ def calc_intersect(p0, p1, p2, p3):
 
     x = (c1 * b0 - c0 * b1) / denom
     y = (c0 * a1 - c1 * a0) / denom
-    return (x, y)
+    return int(x), int(y)

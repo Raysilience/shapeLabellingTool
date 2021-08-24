@@ -62,21 +62,77 @@ class Classifier:
         if flag:
             logging.info("detect {} points".format(len(_points)))
             if len(_points) == 2:
-                self.parts.add(_points)
+                self.parts.add(tuple(_points))
             elif len(_points) == 3:
-                self.parts.add(_points)
+                self.parts.add(tuple(_points))
             elif len(_points) == 4:
-                if MathUtil.within_ball(_points[0], _points[1], self.MIN_CLOSED_DISTANCE, 1):
-                    return self.approxTriangle(_points)
+                if MathUtil.within_ball(_points[0], _points[-1], self.MIN_CLOSED_DISTANCE, 1):
+                    return self._approxTriangle(_points)
                 else:
-                    self.parts.add(_points)
-
+                    self.parts.add(tuple(_points))
+            elif len(_points) == 5:
+                if MathUtil.within_ball(_points[0], _points[-1], self.MIN_CLOSED_DISTANCE, 1):
+                    return self._approxRectangle(_points)
+                else:
+                    self.parts.add(tuple(_points))
+            elif len(_points) == 6:
+                if MathUtil.within_ball(_points[0], _points[-1], self.MIN_CLOSED_DISTANCE, 1):
+                    return self._approxPentagon(_points)
+                else:
+                    self.parts.add(tuple(_points))
+            elif len(_points) == 7:
+                if MathUtil.within_ball(_points[0], _points[-1], self.MIN_CLOSED_DISTANCE, 1):
+                    return self._approxHexagon(_points)
+                else:
+                    self.parts.add(tuple(_points))
             elif len(_points) > 7:
                 logging.info("reach the maximum of turning points, fail to detect")
-                return None
+        return None
 
-    def approxTriangle(self, points):
-        # if len(points) != 4:
-        #     return None
-        res = [MathUtil.calc_intersect(points[0], points[1], points[2], points[3]), points[1], points[2]]
-        return res
+    def _approxTriangle(self, points):
+        if len(points) != 4:
+            logging.info("number of points is not 4")
+            return None
+        intersection = MathUtil.calc_intersect(points[0], points[1], points[-1], points[-2])
+        if intersection is None:
+            logging.info("detect parallel lines")
+            self.parts.add(tuple(points))
+            return None
+        vertices = np.array([intersection, points[1], points[2]], dtype=np.int32)
+        return vertices
+
+    def _approxRectangle(self, points):
+        if len(points) != 5:
+            logging.info("number of points is not 5")
+            return None
+        intersection = MathUtil.calc_intersect(points[0], points[1], points[-1], points[-2])
+        if intersection is None:
+            logging.info("detect parallel lines")
+            self.parts.add(tuple(points))
+            return None
+        vertices = np.array([intersection, points[1], points[2], points[3]], dtype=np.int32)
+        return vertices
+
+    def _approxPentagon(self, points):
+        if len(points) != 6:
+            logging.info("number of points is not 6")
+            return None
+        intersection = MathUtil.calc_intersect(points[0], points[1], points[-1], points[-2])
+        if intersection is None:
+            logging.info("detect parallel lines")
+            self.parts.add(tuple(points))
+            return None
+        vertices = np.array([intersection, points[1], points[2], points[3], points[4]], dtype=np.int32)
+        return vertices
+
+    def _approxHexagon(self, points):
+        if len(points) != 7:
+            logging.info("number of points is not 7")
+            return None
+        intersection = MathUtil.calc_intersect(points[0], points[1], points[-1], points[-2])
+        if intersection is None:
+            logging.info("detect parallel lines")
+            self.parts.add(tuple(points))
+            return None
+        vertices = np.array([intersection, points[1], points[2], points[3], points[4], points[5]], dtype=np.int32)
+        return vertices
