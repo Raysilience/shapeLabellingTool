@@ -11,6 +11,7 @@
 import logging
 import math
 
+import cv2
 import numpy as np
 
 import MathUtil
@@ -134,5 +135,20 @@ class Classifier:
             logging.info("detect parallel lines")
             self.parts.add(tuple(points))
             return None
+
         vertices = np.array([intersection, points[1], points[2], points[3], points[4], points[5]], dtype=np.int32)
-        return vertices
+        return np.array(self._approx_regular_polygon(vertices, None, None))
+        # return vertices
+
+
+
+    def _approx_regular_polygon(self, points, start, direction):
+        center, radius = cv2.minEnclosingCircle(points)
+        num_vertices = len(points)
+        alpha = 2 * math.pi / num_vertices
+        angle = 0
+        reg_shape_at_origin = []
+        for p in points:
+            reg_shape_at_origin.append(MathUtil.polar_to_cartesian(angle, radius))
+            angle += alpha
+        return reg_shape_at_origin

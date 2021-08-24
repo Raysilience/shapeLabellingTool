@@ -4,9 +4,9 @@ import MathUtil
 from whiteboard import Whiteboard
 
 if __name__ == '__main__':
-    # print(MathUtil.calc_intersect((0, 0), (0.5, 1), (1, 0), (1,1)))
-
-
+    # print(MathUtil.polar_to_cartesian((30, 2)))
+    # #
+    #
     LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
