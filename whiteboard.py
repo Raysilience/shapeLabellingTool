@@ -26,14 +26,14 @@ class Whiteboard:
 
     def draw(self):
         cv2.namedWindow(self.whiteboard_name)
-        cv2.setMouseCallback(self.whiteboard_name, self._OnMouseAction)
+        cv2.setMouseCallback(self.whiteboard_name, self._on_mouse_action)
         while 1:
             cv2.imshow(self.whiteboard_name, self.whiteboard)
             if cv2.waitKey(100) == 27:
                 break
         cv2.destroyAllWindows()
 
-    def _OnMouseAction(self, event, x, y, flags, param):
+    def _on_mouse_action(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
             self.points.append((x, y))
             logging.info("x: {}\ty: {}".format(x, y))

@@ -25,6 +25,11 @@ def calc_sin_angle(vec1, vec2):
     return np.linalg.norm(vec_c) / (mod1 * mod2) if mod1 * mod2 != 0 else 0
 
 
+def calc_radian(vec1, vec2):
+    cos_theta = calc_cos_angle(vec1, vec2)
+    return math.acos(cos_theta)
+
+
 def calc_cos_against_x_pos_axis(vec):
     unit_x = np.array([1, 0])
     return calc_cos_angle(vec, unit_x)
@@ -66,3 +71,11 @@ def polar_to_cartesian(rho, radius):
     x = radius * math.cos(rho)
     y = radius * math.sin(rho)
     return x, y
+
+def get_affine_matrix(radian):
+    res = np.eye(2)
+    res[0][0] = math.cos(radian)
+    res[0][1] = -math.sin(radian)
+    res[1][0] = math.sin(radian)
+    res[1][1] = math.cos(radian)
+    return res
