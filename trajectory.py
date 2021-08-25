@@ -17,8 +17,10 @@ import MathUtil
 
 
 class Trajectory:
-    def __init__(self, points):
+    def __init__(self, points, align_on=True):
         self.points = points
+        self._is_align_on = align_on
+        self.MAX_ALIGN_RADIAN = math.pi/18
 
     def is_closed(self, factor, ord=None):
         """
@@ -45,8 +47,10 @@ class Trajectory:
             self.parts.add(tuple(self.points))
             return None
         vertices = np.array([intersection, self.points[1], self.points[2]], dtype=np.int32)
-        return self._align_shape(vertices)
-        # return vertices
+        if self._is_align_on:
+            return self._align_shape(vertices)
+        else:
+            return vertices
 
     def approx_rectangle(self):
         if len(self.points) != 5:
@@ -57,7 +61,10 @@ class Trajectory:
             logging.info("detect parallel lines")
             return None
         vertices = np.array([intersection, self.points[1], self.points[2], self.points[3]], dtype=np.int32)
-        return vertices
+        if self._is_align_on:
+            return self._align_shape(vertices)
+        else:
+            return vertices
 
     def approx_pentagon(self):
         if len(self.points) != 6:
@@ -69,7 +76,12 @@ class Trajectory:
             return None
         vertices = np.array([intersection, self.points[1], self.points[2], self.points[3], self.points[4]],
                             dtype=np.int32)
-        return self._approx_regular_polygon(vertices, None)
+        vertices =  self._approx_regular_polygon(vertices, None)
+
+        if self._is_align_on:
+            return self._align_shape(vertices)
+        else:
+            return vertices
 
     def approx_hexagon(self):
         if len(self.points) != 7:
@@ -105,37 +117,42 @@ class Trajectory:
 
     def _align_shape(self, vertices):
         center, radius = cv2.minEnclosingCircle(vertices)
-        abs_rad = math.pi
-        rad = math.pi
+        abs_rad = 2 * math.pi
+        rad = abs_rad
         for i in range(len(vertices)):
             v0 = vertices[i - 1]
             v1 = vertices[i]
-            tmp = self._get_rotation_rad(v0, v1)
-            if abs(tmp) < abs_rad:
-                abs_rad = tmp
-                rad = tmp
+            tmp_rad = self._get_rotation_rad(v0, v1)
+            if abs(tmp_rad) < abs_rad:
+                abs_rad = abs(tmp_rad)
+                rad = tmp_rad
+
+        if abs(rad) > self.MAX_ALIGN_RADIAN:
+            return vertices
 
         vertices_to_origin = vertices - center
         affine_mat = MathUtil.get_affine_matrix(rad)
-        tmp = np.dot(vertices_to_origin, affine_mat)
-        tmp += center
-        tmp = tmp.astype(dtype=np.int32)
-        return tmp
+        tmp_mat = np.dot(vertices_to_origin, affine_mat)
+        tmp_mat += center
+        tmp_mat = tmp_mat.astype(dtype=np.int32)
+        return tmp_mat
 
     def _get_rotation_rad(self, p0, p1):
         """
         given a straight line, find an optimal radian to align it with either axis
+        :param p0: point0 in the form of numpy array
         :param p1: point1 in the form of numpy array
-        :param p2: point2 in the form of numpy array
         :return: radian value
         """
         delta_x = p0[0] - p1[0]
         delta_y = p0[1] - p1[1]
         if abs(delta_x) > abs(delta_y):
             rad = MathUtil.calc_radian(p0 - p1, np.array([1, 0]))
+            rad = rad if rad < math.pi / 2 else math.pi - rad
+            sign = (delta_x < 0 and delta_y < 0) or (delta_x > 0 and delta_y > 0)
         else:
             rad = MathUtil.calc_radian(p0 - p1, np.array([0, 1]))
-        rad = rad if rad < math.pi/2 else math.pi - rad
-        sign = (delta_x < 0 and delta_y < 0) or (delta_x > 0 and delta_y > 0)
+            rad = rad if rad < math.pi / 2 else math.pi - rad
+            sign = (delta_x < 0 and delta_y > 0) or (delta_x > 0 and delta_y < 0)
         sign = 1 if sign else -1
         return sign * rad

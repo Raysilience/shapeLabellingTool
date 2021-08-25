@@ -23,6 +23,7 @@ class Classifier:
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 10
         self.MAX_CLOSED_FACTOR = 0.4
+        self.ALIGN_SHAPE = True
         self.parts = set()
 
     def _check_convexity_and_turning_points(self, points):
@@ -62,7 +63,7 @@ class Classifier:
 
     def get_refined_polyline(self, points):
         flag, _points = self._check_convexity_and_turning_points(points)
-        traj = Trajectory(_points)
+        traj = Trajectory(_points, self.ALIGN_SHAPE)
         if flag:
             logging.info("detect {} points".format(traj.get_length()))
             if traj.get_length() == 2:
