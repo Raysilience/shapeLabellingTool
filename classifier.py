@@ -19,10 +19,10 @@ from trajectory import Trajectory
 
 class Classifier:
     def __init__(self):
-        self.MIN_BALL_RADIUS = 20
+        self.MIN_BALL_RADIUS = 40
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 10
-        self.MAX_CLOSED_FACTOR = 0.3
+        self.MAX_CLOSED_FACTOR = 0.4
         self.parts = set()
 
     def _check_convexity_and_turning_points(self, points):
@@ -44,6 +44,7 @@ class Classifier:
                 if not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
                                             self.MIN_BALL_RADIUS, 1):
                     turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
+            if cos_theta < math.cos(math.pi / 5):
                 is_clockwise = None
                 if vec_c > 0:
                     is_clockwise = False
