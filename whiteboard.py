@@ -39,6 +39,7 @@ class Whiteboard:
             logging.info("x: {}\ty: {}".format(x, y))
             cv2.circle(self.whiteboard, (x, y), 2, (255, 0, 0), 2)
         elif event == cv2.EVENT_LBUTTONUP:
+
             _points = self.classifier.get_refined_polyline(self.points)
             print(_points)
             self._draw_shape(_points)
