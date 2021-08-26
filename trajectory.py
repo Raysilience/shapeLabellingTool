@@ -21,6 +21,7 @@ class Trajectory:
         self.points = points
         self._is_align_on = align_on
         self.MAX_ALIGN_RADIAN = math.pi/18
+        self.MAX_PARALLEL_SIN = math.sin(math.pi/10 )
 
     def is_closed(self, factor, ord=None):
         """
@@ -34,67 +35,76 @@ class Trajectory:
         _, radius = cv2.minEnclosingCircle(self.points)
         return MathUtil.within_ball(self.points[0], self.points[-1], radius * factor, ord)
 
+    def is_parallel(self, begin=True, traj=None):
+        """
+        determine whether the beginning segment is parallel with the end segment if vec is None, otherwise,
+        determine whether the vec is parallel with either beginning or end segment
+        :param begin: compare the beginning or the end of points
+        :param traj: segment of another trajectory
+        :return: True if parallel otherwise False
+        """
+        if self.get_length() < 4:
+            return False
+        return MathUtil.calc_sin_angle(self.points[0] - self.points[1], self.points[-2] - self.points[-1]) < self.MAX_PARALLEL_SIN
+
+
     def get_length(self):
         return len(self.points)
 
     def approx_triangle(self):
-        if len(self.points) != 4:
-            logging.info("number of points is not 4")
+        if self.get_length() == 4:
+            intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
+            vertices = np.array([intersection, self.points[1], self.points[2]], dtype=np.int32)
+        elif self.get_length() == 3:
+            vertices = self.points
+        else:
             return None
-        intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
-        if intersection is None:
-            logging.info("detect parallel lines")
-            self.parts.add(tuple(self.points))
-            return None
-        vertices = np.array([intersection, self.points[1], self.points[2]], dtype=np.int32)
+
         if self._is_align_on:
             return self._align_shape(vertices)
         else:
             return vertices
 
     def approx_rectangle(self):
-        if len(self.points) != 5:
-            logging.info("number of points is not 5")
+        if self.get_length() == 5:
+            intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
+            vertices = np.array([intersection, self.points[1], self.points[2], self.points[3]], dtype=np.int32)
+        elif self.get_length() == 4:
+            vertices = self.points
+        else:
             return None
-        intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
-        if intersection is None:
-            logging.info("detect parallel lines")
-            return None
-        vertices = np.array([intersection, self.points[1], self.points[2], self.points[3]], dtype=np.int32)
+
         if self._is_align_on:
             return self._align_shape(vertices)
         else:
             return vertices
 
     def approx_pentagon(self):
-        if len(self.points) != 6:
-            logging.info("number of points is not 6")
+        if self.get_length() == 6:
+            intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
+            vertices = np.array([intersection, self.points[1], self.points[2], self.points[3], self.points[4]],
+                                dtype=np.int32)
+        elif self.get_length() == 5:
+            vertices = self.points
+        else:
             return None
-        intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
-        if intersection is None:
-            logging.info("detect parallel lines")
-            return None
-        vertices = np.array([intersection, self.points[1], self.points[2], self.points[3], self.points[4]],
-                            dtype=np.int32)
-        vertices =  self._approx_regular_polygon(vertices, None)
 
+        vertices = self._approx_regular_polygon(vertices, None)
         if self._is_align_on:
             return self._align_shape(vertices)
         else:
             return vertices
 
     def approx_hexagon(self):
-        if len(self.points) != 7:
-            logging.info("number of points is not 7")
+        if len(self.points) == 7:
+            intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
+            vertices = np.array(
+                [intersection, self.points[1], self.points[2], self.points[3], self.points[4], self.points[5]],
+                dtype=np.int32)
+        elif self.get_length() == 6:
+            vertices = self.points
+        else:
             return None
-        intersection = MathUtil.calc_intersect(self.points[0], self.points[1], self.points[-1], self.points[-2])
-        if intersection is None:
-            logging.info("detect parallel lines")
-            return None
-
-        vertices = np.array(
-            [intersection, self.points[1], self.points[2], self.points[3], self.points[4], self.points[5]],
-            dtype=np.int32)
         return self._approx_regular_polygon(vertices, None)
 
     def _approx_regular_polygon(self, vertices, direction):
@@ -156,3 +166,4 @@ class Trajectory:
             sign = (delta_x < 0 and delta_y > 0) or (delta_x > 0 and delta_y < 0)
         sign = 1 if sign else -1
         return sign * rad
+

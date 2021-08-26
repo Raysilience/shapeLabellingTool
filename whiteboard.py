@@ -40,7 +40,7 @@ class Whiteboard:
             cv2.circle(self.whiteboard, (x, y), 2, (255, 0, 0), 2)
         elif event == cv2.EVENT_LBUTTONUP:
 
-            _points = self.classifier.get_refined_polyline(self.points)
+            _points = self.classifier.detect(self.points)
             print(_points)
             self._draw_shape(_points)
             self.points.clear()
@@ -50,10 +50,3 @@ class Whiteboard:
             cv2.polylines(self.whiteboard, [points], True, (0, 255, 0), 2)
             for point in points:
                 cv2.circle(self.whiteboard, point, 3, (0, 0, 255), 2)
-
-if __name__ == '__main__':
-    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
-    whiteboard = Whiteboard()
-    whiteboard.draw()

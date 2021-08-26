@@ -26,7 +26,27 @@ class Classifier:
         self.ALIGN_SHAPE = True
         self.parts = set()
 
+    def detect(self, points):
+        """
+        detect whether a sequence of points represents a geometric shape
+        :param points: a sequence of points sampled in a specific sampling rate
+        :return: vector of points if any, otherwise, None
+        """
+        is_convex, _points = self._check_convexity_and_turning_points(points)
+        if is_convex:
+            trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+            if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
+                return self._get_refined_polyline(trajectory)
+            else:
+                self.parts.add(trajectory)
+        return None
+
     def _check_convexity_and_turning_points(self, points):
+        """
+        check graph convexity and find robust turning points in the graph
+        :param points: sampling points
+        :return: boolean, points
+        """
         if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
             logging.info("u'd better increase sampling frequency or draw longer lines")
             return False, None
@@ -61,35 +81,43 @@ class Classifier:
         turning_points = np.asarray(turning_points)
         return True, turning_points
 
-    def get_refined_polyline(self, points):
-        flag, _points = self._check_convexity_and_turning_points(points)
-        traj = Trajectory(_points, self.ALIGN_SHAPE)
-        if flag:
-            logging.info("detect {} points".format(traj.get_length()))
-            if traj.get_length() == 2:
-                self.parts.add(traj)
-            elif traj.get_length() == 3:
-                self.parts.add(traj)
-            elif traj.get_length() == 4:
-                if traj.is_closed(self.MAX_CLOSED_FACTOR):
-                    return traj.approx_triangle()
-                else:
-                    self.parts.add(traj)
-            elif traj.get_length() == 5:
-                if traj.is_closed(self.MAX_CLOSED_FACTOR):
-                    return traj.approx_rectangle()
-                else:
-                    self.parts.add(traj)
-            elif traj.get_length() == 6:
-                if traj.is_closed(self.MAX_CLOSED_FACTOR):
-                    return traj.approx_pentagon()
-                else:
-                    self.parts.add(traj)
-            elif traj.get_length() == 7:
-                if traj.is_closed(self.MAX_CLOSED_FACTOR):
-                    return traj.approx_hexagon()
-                else:
-                    self.parts.add(traj)
-            elif len(_points) > 7:
-                logging.info("reach the maximum of turning points, fail to detect")
+    def _get_refined_polyline(self, trajectory):
+        """
+        determine which kind of shape the trajectory represents and fine tune the shape
+        :param trajectory: of the shape
+        :return: the vertices of polyline
+        """
+        logging.info("detect {} points".format(trajectory.get_length()))
+        if trajectory.get_length() < 4:
+            pass
+        elif trajectory.get_length() == 4:
+            return trajectory.approx_triangle()
+
+        elif trajectory.get_length() == 5:
+            if trajectory.is_parallel():
+                trajectory.points = trajectory.points[1:-1]
+                return trajectory.approx_triangle()
+            else:
+                return trajectory.approx_rectangle()
+
+        elif trajectory.get_length() == 6:
+            if trajectory.is_parallel():
+                trajectory.points = trajectory.points[1:-1]
+                return trajectory.approx_rectangle()
+            else:
+                return trajectory.approx_pentagon()
+
+        elif trajectory.get_length() == 7:
+            if trajectory.is_parallel():
+                trajectory.points = trajectory.points[1:-1]
+                return trajectory.approx_pentagon()
+            else:
+                return trajectory.approx_hexagon()
+
+        elif trajectory.get_length() == 8:
+            if trajectory.is_parallel():
+                trajectory.points = trajectory.points[1:-1]
+                return trajectory.approx_hexagon()
+        else:
+            logging.info("reach the maximum of turning points, fail to detect")
         return None
