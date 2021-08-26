@@ -14,6 +14,7 @@ import math
 import numpy as np
 
 import MathUtil
+import ShapeUtil
 from trajectory import Trajectory
 
 
@@ -38,7 +39,31 @@ class Classifier:
             if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
                 return self._get_refined_polyline(trajectory)
             else:
-                self.parts.add(trajectory)
+                pass
+                # traj = self._match_trajectory(trajectory)
+                # self.parts.add(trajectory)
+                # if traj:
+                #     return traj
+        return None
+
+
+    # Todo: optimize matching process with bisection
+    def _match_trajectory(self, trajectory):
+        """
+        match two trajectory. if they can concatenate into a closed convex shape return it otherwise store it
+        in the parts
+        :param trajectory: current trajectory to be matched
+        :return: trajectory of a new shape if it meets requirements otherwise None
+        """
+        for part in self.parts:
+            print(part.points)
+            traj, cnt_match = trajectory.is_match(part)
+            print(traj, cnt_match)
+            if cnt_match == 1:
+                self.parts.add(traj)
+            elif cnt_match == 2:
+                return self._get_refined_polyline(traj)
+
         return None
 
     def _check_convexity_and_turning_points(self, points):

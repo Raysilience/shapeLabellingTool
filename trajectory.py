@@ -20,8 +20,9 @@ class Trajectory:
     def __init__(self, points, align_on=True):
         self.points = points
         self._is_align_on = align_on
-        self.MAX_ALIGN_RADIAN = math.pi/18
-        self.MAX_PARALLEL_SIN = math.sin(math.pi/10 )
+        self.MAX_ALIGN_RADIAN = math.pi / 18
+        self.MAX_PARALLEL_SIN = math.sin(math.pi / 10)
+        self.MAX_MATCH_DISTANCE = 10
 
     def is_closed(self, factor, ord=None):
         """
@@ -35,7 +36,7 @@ class Trajectory:
         _, radius = cv2.minEnclosingCircle(self.points)
         return MathUtil.within_ball(self.points[0], self.points[-1], radius * factor, ord)
 
-    def is_parallel(self, begin=True, traj=None):
+    def is_parallel(self):
         """
         determine whether the beginning segment is parallel with the end segment if vec is None, otherwise,
         determine whether the vec is parallel with either beginning or end segment
@@ -45,8 +46,52 @@ class Trajectory:
         """
         if self.get_length() < 4:
             return False
-        return MathUtil.calc_sin_angle(self.points[0] - self.points[1], self.points[-2] - self.points[-1]) < self.MAX_PARALLEL_SIN
+        else:
+            return MathUtil.calc_sin_angle(self.points[0] - self.points[1],
+                                           self.points[-2] - self.points[-1]) < self.MAX_PARALLEL_SIN
 
+    def is_match(self, trajectory):
+        """
+        determine whether two trajectory matches
+        :param trajectory:
+        :return:
+        """
+        num_matching_points = 0
+        opt = [0, -1]
+        # status[0] is state of param trajectory; status[1] is state of host trajectory;
+        status = [1, 1]
+        for i in opt:
+            for j in opt:
+                if i == status[0] or j == status[1]:
+                    continue
+                if MathUtil.within_ball(trajectory.points[i], self.points[j], self.MAX_MATCH_DISTANCE):
+                    status[0] = i
+                    status[1] = j
+                    num_matching_points += 1
+
+        if num_matching_points == 1:
+            parallel = MathUtil.calc_sin_angle(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
+                                               self.points[status[1]] - self.points[
+                                                   3 * status[1] + 1]) < self.MAX_PARALLEL_SIN
+            return self.concat_points(status[0], status[1], parallel, trajectory.points, self.points), 1
+
+        elif num_matching_points == 2:
+            return None, 2
+
+        return None, 0
+
+
+
+    def concat_points(self, status0, status1, parallel, pts0, pts1):
+        val = 1 if parallel else 0
+        if status0 == 0 and status1 == 0:
+            return Trajectory(np.append(pts0[:0:-1], pts1[val:]))
+        elif status0 == 0 and status1 == -1:
+            return Trajectory(np.append(pts1[:-1], pts0[val:]))
+        elif status0 == -1 and status1 == 0:
+            return Trajectory(np.append(pts0[:-1], pts1[val:]))
+        elif status0 == -1 and status1 == -1:
+            return Trajectory(np.append(pts0[:len(pts0) - val], pts1[:0:-1]))
 
     def get_length(self):
         return len(self.points)
@@ -166,4 +211,3 @@ class Trajectory:
             sign = (delta_x < 0 and delta_y > 0) or (delta_x > 0 and delta_y < 0)
         sign = 1 if sign else -1
         return sign * rad
-

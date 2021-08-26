@@ -40,9 +40,9 @@ class Whiteboard:
             cv2.circle(self.whiteboard, (x, y), 2, (255, 0, 0), 2)
         elif event == cv2.EVENT_LBUTTONUP:
 
-            _points = self.classifier.detect(self.points)
-            print(_points)
-            self._draw_shape(_points)
+            pts = self.classifier.detect(self.points)
+            print(pts)
+            self._draw_shape(pts)
             self.points.clear()
 
     def _draw_shape(self, points):
