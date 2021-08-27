@@ -12,7 +12,7 @@ import math
 import cv2
 import numpy as np
 
-import MathUtil
+from utils import MathUtil
 
 
 def is_convex(vertices):
@@ -21,7 +21,9 @@ def is_convex(vertices):
     :param: vertices in the form of numpy array
     :return: boolean
     """
-    if len(vertices) < 4:
+    if len(vertices) < 2:
+        return False
+    elif len(vertices) < 4:
         return True
     sum_radian = 0
     for i in range(len(vertices)):

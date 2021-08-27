@@ -1,9 +1,5 @@
 import logging
-import math
 
-import numpy as np
-
-import MathUtil
 from whiteboard import Whiteboard
 
 if __name__ == '__main__':

@@ -13,8 +13,7 @@ import math
 
 import numpy as np
 
-import MathUtil
-import ShapeUtil
+from utils import MathUtil, ShapeUtil
 from trajectory import Trajectory
 
 
@@ -79,10 +78,10 @@ class Classifier:
         :param points: sampling points
         :return: boolean, points
         """
+        turning_points = []
         if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
             logging.info("u'd better increase sampling frequency or draw longer lines")
-            return None
-        turning_points = []
+            return turning_points
         for i in range(0, len(points) - self.NUM_OF_CONSECUTIVE_POINTS):
             if i == 0:
                 turning_points.append(points[i])
@@ -92,7 +91,7 @@ class Classifier:
                 points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
             cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
             if cos_theta < self.MIN_DISTINGUISH_ANGLE and not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
-                                            self.MIN_BALL_RADIUS, 1):
+                                                                                   self.MIN_BALL_RADIUS, 1):
                     turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
 
         turning_points.append(points[-1])

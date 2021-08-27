@@ -7,14 +7,12 @@
 @Author     :Rui
 @Desc       :
 '''
-import logging
 import math
 
 import cv2
 import numpy as np
 
-import MathUtil
-import ShapeUtil
+from utils import MathUtil, ShapeUtil
 
 
 class Trajectory:
@@ -74,15 +72,15 @@ class Trajectory:
 
         if num_matching_points == 1:
             rad = MathUtil.calc_radian(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
-                                               self.points[status[1]] - self.points[3 * status[1] + 1])
+                                       self.points[status[1]] - self.points[3 * status[1] + 1])
             parallel = abs(rad - math.pi) < self.MAX_PARALLEL_RADIAN
             return self.concat_points(status[0], status[1], parallel, trajectory.points, self.points), 1
 
         elif num_matching_points == 2:
             rad0 = MathUtil.calc_radian(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
-                                       self.points[status[1]] - self.points[3 * status[1] + 1])
+                                        self.points[status[1]] - self.points[3 * status[1] + 1])
             parallel0 = abs(rad0 - math.pi) < self.MAX_PARALLEL_RADIAN
-            rad1 = MathUtil.calc_radian(trajectory.points[-status[0]-1] - trajectory.points[-3 * status[0] - 2],
+            rad1 = MathUtil.calc_radian(trajectory.points[-status[0] - 1] - trajectory.points[-3 * status[0] - 2],
                                         self.points[-status[1]-1] - self.points[-3 * status[1] - 2])
             parallel1 = abs(rad1 - math.pi) < self.MAX_PARALLEL_RADIAN
             if parallel0:
