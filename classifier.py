@@ -64,6 +64,7 @@ class Classifier:
         for part in list(self.parts):
             traj, cnt_match = trajectory.match(part)
             logging.debug("number of matched points: {}\n".format(cnt_match))
+
             if traj is not None and ShapeUtil.is_convex(traj.points):
                 if cnt_match == 1:
                     self.parts.add(traj)

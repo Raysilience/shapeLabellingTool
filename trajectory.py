@@ -84,9 +84,13 @@ class Trajectory:
                                         self.points[-status[1]-1] - self.points[-3 * status[1] - 2])
             parallel1 = abs(rad1 - math.pi) < self.MAX_PARALLEL_RADIAN
             if parallel0:
-                trajectory.points.remove(status[0])
+                trajectory.points = np.delete(trajectory.points, status[0], axis=0)
             if parallel1:
-                trajectory.points.remove(-status[0]-1)
+                trajectory.points = np.delete(trajectory.points, -status[0]-1, axis=0)
+
+            if status[0]^status[1] == 0:
+                self.points = self.points[::-1]
+
             ans = np.append(trajectory.points, self.points[1:-1], axis=0)
             if len(ans) > 1:
                 return Trajectory(ans), 2
