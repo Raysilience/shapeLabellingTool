@@ -39,9 +39,8 @@ class Whiteboard:
             logging.info("x: {}\ty: {}".format(x, y))
             cv2.circle(self.whiteboard, (x, y), 2, (255, 0, 0), 2)
         elif event == cv2.EVENT_LBUTTONUP:
-
             pts = self.classifier.detect(self.points)
-            print(pts)
+            logging.info("polygon vertices: {}".format(pts))
             self._draw_shape(pts)
             self.points.clear()
 

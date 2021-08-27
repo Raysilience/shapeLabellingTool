@@ -33,18 +33,23 @@ class Classifier:
         :param points: a sequence of points sampled in a specific sampling rate
         :return: vector of points if any, otherwise, None
         """
-        is_convex, _points = self._check_convexity_and_turning_points(points)
-        if is_convex:
-            trajectory = Trajectory(_points, self.ALIGN_SHAPE)
-            if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
-                return self._get_refined_polyline(trajectory)
-            else:
-                pass
-                # traj = self._match_trajectory(trajectory)
-                # self.parts.add(trajectory)
-                # if traj:
-                #     return traj
-        return None
+        pts = None
+        _points = self._find_turning_points(points)
+        trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+
+        # one touch drawing
+        if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
+            if ShapeUtil.is_convex(_points[:-1]):
+                pts = self._approx_polygon(trajectory)
+
+        # multi touches drawing
+        else:
+            if ShapeUtil.is_convex(_points):
+                pts = self._match_trajectory(trajectory)
+                # pts could not form a polygon add it to part
+                if pts is None:
+                    self.parts.add(trajectory)
+        return pts
 
 
     # Todo: optimize matching process with bisection
@@ -53,20 +58,22 @@ class Classifier:
         match two trajectory. if they can concatenate into a closed convex shape return it otherwise store it
         in the parts
         :param trajectory: current trajectory to be matched
-        :return: trajectory of a new shape if it meets requirements otherwise None
+        :return: points of a new shape if it meets requirements otherwise None
         """
-        for part in self.parts:
-            print(part.points)
-            traj, cnt_match = trajectory.is_match(part)
-            print(traj, cnt_match)
-            if cnt_match == 1:
-                self.parts.add(traj)
-            elif cnt_match == 2:
-                return self._get_refined_polyline(traj)
+        pts = None
+        logging.debug("number of parts: {}\n".format(len(self.parts)))
+        for part in list(self.parts):
+            traj, cnt_match = trajectory.match(part)
+            logging.debug("number of matched points: {}\n".format(cnt_match))
+            if traj is not None and ShapeUtil.is_convex(traj.points):
+                if cnt_match == 1:
+                    self.parts.add(traj)
+                elif cnt_match == 2:
+                    pts = ShapeUtil.align_shape(traj.points, traj.MAX_ALIGN_RADIAN)
+                    self.parts.remove(part)
+        return pts
 
-        return None
-
-    def _check_convexity_and_turning_points(self, points):
+    def _find_turning_points(self, points):
         """
         check graph convexity and find robust turning points in the graph
         :param points: sampling points
@@ -74,9 +81,8 @@ class Classifier:
         """
         if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
             logging.info("u'd better increase sampling frequency or draw longer lines")
-            return False, None
+            return None
         turning_points = []
-        clockwise = None
         for i in range(0, len(points) - self.NUM_OF_CONSECUTIVE_POINTS):
             if i == 0:
                 turning_points.append(points[i])
@@ -84,29 +90,16 @@ class Classifier:
             vec1 = np.asarray(points[i]) - np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
             vec2 = np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1]) - np.asarray(
                 points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
-            vec_c = np.cross(vec1, vec2)
             cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
-            if cos_theta < self.MIN_DISTINGUISH_ANGLE:
-                if not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
+            if cos_theta < self.MIN_DISTINGUISH_ANGLE and not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
                                             self.MIN_BALL_RADIUS, 1):
                     turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
-            if cos_theta < math.cos(math.pi / 5):
-                is_clockwise = None
-                if vec_c > 0:
-                    is_clockwise = False
-                if vec_c < 0:
-                    is_clockwise = True
-                if clockwise is None and is_clockwise is not None:
-                    clockwise = is_clockwise
-                    continue
-                if clockwise is not None and is_clockwise is not None:
-                    if clockwise ^ is_clockwise:
-                        return False, None
+
         turning_points.append(points[-1])
         turning_points = np.asarray(turning_points)
-        return True, turning_points
+        return turning_points
 
-    def _get_refined_polyline(self, trajectory):
+    def _approx_polygon(self, trajectory):
         """
         determine which kind of shape the trajectory represents and fine tune the shape
         :param trajectory: of the shape

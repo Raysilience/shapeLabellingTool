@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 
 import MathUtil
+import ShapeUtil
 
 
 class Trajectory:
@@ -21,8 +22,9 @@ class Trajectory:
         self.points = points
         self._is_align_on = align_on
         self.MAX_ALIGN_RADIAN = math.pi / 18
-        self.MAX_PARALLEL_SIN = math.sin(math.pi / 10)
-        self.MAX_MATCH_DISTANCE = 10
+        self.MAX_PARALLEL_RADIAN = math.pi / 10
+        self.MAX_PARALLEL_SIN = math.sin(self.MAX_PARALLEL_RADIAN)
+        self.MAX_MATCH_DISTANCE = 20
 
     def is_closed(self, factor, ord=None):
         """
@@ -50,15 +52,15 @@ class Trajectory:
             return MathUtil.calc_sin_angle(self.points[0] - self.points[1],
                                            self.points[-2] - self.points[-1]) < self.MAX_PARALLEL_SIN
 
-    def is_match(self, trajectory):
+    def match(self, trajectory):
         """
         determine whether two trajectory matches
         :param trajectory:
-        :return:
+        :return: trajectory if two trajectories combine into a new one
         """
         num_matching_points = 0
         opt = [0, -1]
-        # status[0] is state of param trajectory; status[1] is state of host trajectory;
+        # status[0] is state of param trajectory; status[1] is state of the host trajectory;
         status = [1, 1]
         for i in opt:
             for j in opt:
@@ -69,15 +71,27 @@ class Trajectory:
                     status[1] = j
                     num_matching_points += 1
 
+
         if num_matching_points == 1:
-            parallel = MathUtil.calc_sin_angle(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
-                                               self.points[status[1]] - self.points[
-                                                   3 * status[1] + 1]) < self.MAX_PARALLEL_SIN
+            rad = MathUtil.calc_radian(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
+                                               self.points[status[1]] - self.points[3 * status[1] + 1])
+            parallel = abs(rad - math.pi) < self.MAX_PARALLEL_RADIAN
             return self.concat_points(status[0], status[1], parallel, trajectory.points, self.points), 1
 
         elif num_matching_points == 2:
-            return None, 2
-
+            rad0 = MathUtil.calc_radian(trajectory.points[status[0]] - trajectory.points[3 * status[0] + 1],
+                                       self.points[status[1]] - self.points[3 * status[1] + 1])
+            parallel0 = abs(rad0 - math.pi) < self.MAX_PARALLEL_RADIAN
+            rad1 = MathUtil.calc_radian(trajectory.points[-status[0]-1] - trajectory.points[-3 * status[0] - 2],
+                                        self.points[-status[1]-1] - self.points[-3 * status[1] - 2])
+            parallel1 = abs(rad1 - math.pi) < self.MAX_PARALLEL_RADIAN
+            if parallel0:
+                trajectory.points.remove(status[0])
+            if parallel1:
+                trajectory.points.remove(-status[0]-1)
+            ans = np.append(trajectory.points, self.points[1:-1], axis=0)
+            if len(ans) > 1:
+                return Trajectory(ans), 2
         return None, 0
 
 
@@ -85,13 +99,13 @@ class Trajectory:
     def concat_points(self, status0, status1, parallel, pts0, pts1):
         val = 1 if parallel else 0
         if status0 == 0 and status1 == 0:
-            return Trajectory(np.append(pts0[:0:-1], pts1[val:]))
+            return Trajectory(np.append(pts0[:0:-1], pts1[val:], axis=0))
         elif status0 == 0 and status1 == -1:
-            return Trajectory(np.append(pts1[:-1], pts0[val:]))
+            return Trajectory(np.append(pts1[:-1], pts0[val:], axis=0))
         elif status0 == -1 and status1 == 0:
-            return Trajectory(np.append(pts0[:-1], pts1[val:]))
+            return Trajectory(np.append(pts0[:-1], pts1[val:], axis=0))
         elif status0 == -1 and status1 == -1:
-            return Trajectory(np.append(pts0[:len(pts0) - val], pts1[:0:-1]))
+            return Trajectory(np.append(pts0[:len(pts0) - val], pts1[:0:-1], axis=0))
 
     def get_length(self):
         return len(self.points)
@@ -106,7 +120,7 @@ class Trajectory:
             return None
 
         if self._is_align_on:
-            return self._align_shape(vertices)
+            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
         else:
             return vertices
 
@@ -120,7 +134,7 @@ class Trajectory:
             return None
 
         if self._is_align_on:
-            return self._align_shape(vertices)
+            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
         else:
             return vertices
 
@@ -136,7 +150,7 @@ class Trajectory:
 
         vertices = self._approx_regular_polygon(vertices, None)
         if self._is_align_on:
-            return self._align_shape(vertices)
+            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
         else:
             return vertices
 
@@ -169,45 +183,3 @@ class Trajectory:
         tmp = tmp.astype(dtype=np.int32)
         trans = np.array(center, dtype=np.int32)
         return trans + tmp
-
-    def _align_shape(self, vertices):
-        center, radius = cv2.minEnclosingCircle(vertices)
-        abs_rad = 2 * math.pi
-        rad = abs_rad
-        for i in range(len(vertices)):
-            v0 = vertices[i - 1]
-            v1 = vertices[i]
-            tmp_rad = self._get_rotation_rad(v0, v1)
-            if abs(tmp_rad) < abs_rad:
-                abs_rad = abs(tmp_rad)
-                rad = tmp_rad
-
-        if abs(rad) > self.MAX_ALIGN_RADIAN:
-            return vertices
-
-        vertices_to_origin = vertices - center
-        affine_mat = MathUtil.get_affine_matrix(rad)
-        tmp_mat = np.dot(vertices_to_origin, affine_mat)
-        tmp_mat += center
-        tmp_mat = tmp_mat.astype(dtype=np.int32)
-        return tmp_mat
-
-    def _get_rotation_rad(self, p0, p1):
-        """
-        given a straight line, find an optimal radian to align it with either axis
-        :param p0: point0 in the form of numpy array
-        :param p1: point1 in the form of numpy array
-        :return: radian value
-        """
-        delta_x = p0[0] - p1[0]
-        delta_y = p0[1] - p1[1]
-        if abs(delta_x) > abs(delta_y):
-            rad = MathUtil.calc_radian(p0 - p1, np.array([1, 0]))
-            rad = rad if rad < math.pi / 2 else math.pi - rad
-            sign = (delta_x < 0 and delta_y < 0) or (delta_x > 0 and delta_y > 0)
-        else:
-            rad = MathUtil.calc_radian(p0 - p1, np.array([0, 1]))
-            rad = rad if rad < math.pi / 2 else math.pi - rad
-            sign = (delta_x < 0 and delta_y > 0) or (delta_x > 0 and delta_y < 0)
-        sign = 1 if sign else -1
-        return sign * rad
