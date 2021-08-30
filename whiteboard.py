@@ -11,7 +11,7 @@
 import cv2
 import numpy as np
 import logging
-from classifier import Classifier
+from core.classifier import Classifier
 
 
 class Whiteboard:

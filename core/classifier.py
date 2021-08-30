@@ -14,7 +14,7 @@ import math
 import numpy as np
 
 from utils import MathUtil, ShapeUtil
-from trajectory import Trajectory
+from core.trajectory import Trajectory
 
 
 class Classifier:
