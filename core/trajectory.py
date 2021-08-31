@@ -150,7 +150,7 @@ class Trajectory:
         else:
             return None
 
-        vertices = self._approx_regular_polygon(vertices, None)
+        # vertices = self._approx_regular_polygon(vertices, None)
         if self._is_align_on:
             return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
         else:
@@ -166,7 +166,9 @@ class Trajectory:
             vertices = self.points
         else:
             return None
-        return self._approx_regular_polygon(vertices, None)
+        # return self._approx_regular_polygon(vertices, None)
+        return vertices
+
 
     def _approx_regular_polygon(self, vertices, direction):
         center, radius = cv2.minEnclosingCircle(vertices)

@@ -21,10 +21,11 @@ class Classifier:
     def __init__(self):
         self.MIN_BALL_RADIUS = 40
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
-        self.NUM_OF_CONSECUTIVE_POINTS = 10
+        self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
         self.ALIGN_SHAPE = True
         self.parts = set()
+        self.LABELS = ['unknown', 'circle', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon',  'ellipse', 'form_extension']
 
     def detect(self, points):
         """
@@ -48,7 +49,12 @@ class Classifier:
                 # pts could not form a polygon add it to part
                 if pts is None:
                     self.parts.add(trajectory)
-        return pts
+
+        if pts is None:
+            label = self.LABELS[0]
+        else:
+            label = self.LABELS[len(pts)]
+        return label, pts
 
 
     # Todo: optimize matching process with bisection
@@ -80,6 +86,7 @@ class Classifier:
         :return: boolean, points
         """
         turning_points = []
+        last_cos_theta = 1
         if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
             logging.info("u'd better increase sampling frequency or draw longer lines")
             return turning_points
@@ -91,10 +98,16 @@ class Classifier:
             vec2 = np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1]) - np.asarray(
                 points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
             cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
-            if cos_theta < self.MIN_DISTINGUISH_ANGLE and not MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
-                                                                                   self.MIN_BALL_RADIUS, 1):
+            if cos_theta < self.MIN_DISTINGUISH_ANGLE:
+                within_ball = MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1], self.MIN_BALL_RADIUS, 1)
+                if not within_ball:
                     turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
-
+                    last_cos_theta = cos_theta
+                else:
+                    if cos_theta < last_cos_theta:
+                        turning_points.pop()
+                        turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
+                        last_cos_theta = cos_theta
         turning_points.append(points[-1])
         turning_points = np.asarray(turning_points)
         return turning_points
@@ -105,7 +118,6 @@ class Classifier:
         :param trajectory: of the shape
         :return: the vertices of polyline
         """
-        logging.info("detect {} points".format(trajectory.get_length()))
         if trajectory.get_length() < 4:
             pass
         elif trajectory.get_length() == 4:

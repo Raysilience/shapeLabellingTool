@@ -29,7 +29,7 @@ def is_convex(vertices):
     for i in range(len(vertices)):
         sum_radian += MathUtil.calc_radian(vertices[i - 2] - vertices[i - 1], vertices[i - 1] - vertices[i])
 
-    return abs(sum_radian - 2 * math.pi) < math.pi / 180
+    return abs(sum_radian - 2 * math.pi) < math.pi / 6
 
 def get_rotation_rad(p0, p1):
     """

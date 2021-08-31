@@ -36,12 +36,12 @@ class Whiteboard:
     def _on_mouse_action(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
             self.points.append((x, y))
-            logging.info("x: {}\ty: {}".format(x, y))
+            logging.debug("x: {}\ty: {}".format(x, y))
             cv2.circle(self.whiteboard, (x, y), 2, (255, 0, 0), 2)
         elif event == cv2.EVENT_LBUTTONUP:
             if self.points is not None:
-                pts = self.classifier.detect(self.points)
-                logging.info("polygon vertices: {}".format(pts))
+                label, pts = self.classifier.detect(self.points)
+                logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                 self._draw_shape(pts)
                 self.points.clear()
 
