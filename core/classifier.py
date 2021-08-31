@@ -23,7 +23,7 @@ class Classifier:
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
-        self.ALIGN_SHAPE = True
+        self.ALIGN_SHAPE = False
         self.parts = set()
         self.LABELS = ['unknown', 'circle', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon',  'ellipse', 'form_extension']
 

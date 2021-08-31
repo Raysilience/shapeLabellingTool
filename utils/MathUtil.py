@@ -80,3 +80,7 @@ def get_affine_matrix(radian):
     res[1][0] = math.sin(radian)
     res[1][1] = math.cos(radian)
     return res
+
+
+def calc_triangle_area(vec1, vec2):
+    return 0.5 * np.cross(vec1, vec2)
