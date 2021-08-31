@@ -30,6 +30,8 @@ class Classifier:
         self.peri = 0
         self.area = 0
 
+
+
     def detect(self, points):
         """
         detect whether a sequence of points represents a geometric shape
@@ -68,6 +70,12 @@ class Classifier:
         if pts is None:
             label = self.LABELS[0]
         else:
+            refined_area, refined_peri = MathUtil.calc_polygon_area_perimeter(pts)
+            area_diff_ratio = abs(refined_area - self.area)/self.area
+            peri_diff_ration = abs(refined_peri - self.peri)/self.peri
+            logging.debug("\narea diff ratio: {}, \nperi diff ratio: {}".format(abs(refined_area - self.area)/self.area, abs(refined_peri - self.peri)/self.peri))
+            if area_diff_ratio > 0.2 or peri_diff_ration > 0.16:
+                return self.LABELS[0], None
             label = self.LABELS[len(pts)]
         return label, pts
 
