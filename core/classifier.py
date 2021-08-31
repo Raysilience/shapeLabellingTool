@@ -23,19 +23,34 @@ class Classifier:
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
-        self.ALIGN_SHAPE = False
+        self.ALIGN_SHAPE = True
+
         self.parts = set()
-        self.LABELS = ['unknown', 'circle', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon',  'ellipse', 'form_extension']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
+        self.peri = 0
+        self.area = 0
 
     def detect(self, points):
         """
         detect whether a sequence of points represents a geometric shape
         :param points: a sequence of points sampled in a specific sampling rate
-        :return: vector of points if any, otherwise, None
+        :return: label and vector points if any; otherwise, None
         """
         pts = None
         _points = self._find_turning_points(points)
-        trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+        thinness = self.peri * self.peri / (self.area + 1e-9)
+        logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area, self.peri*self.peri/(self.area+1e-9)))
+
+        # detect circle
+        if thinness < 13.89:
+            trajectory = Trajectory(points)
+            center, radius = trajectory.approx_circle()
+            label = self.LABELS[7]
+            return label, [center, radius]
+
+        else:
+            trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+
 
         # one touch drawing
         if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
@@ -87,29 +102,37 @@ class Classifier:
         """
         turning_points = []
         last_cos_theta = 1
+        self.peri = 0
+        self.area = 0
         if len(points) < self.NUM_OF_CONSECUTIVE_POINTS:
             logging.info("u'd better increase sampling frequency or draw longer lines")
             return turning_points
-        for i in range(0, len(points) - self.NUM_OF_CONSECUTIVE_POINTS):
+        for i in range(len(points)):
+            self.peri += np.linalg.norm(np.asarray(points[i - 1]) - np.asarray(points[i]))
+            self.area += points[i-1][0] * points[i][1] - points[i][0] * points[i-1][1]
             if i == 0:
                 turning_points.append(points[i])
                 continue
-            vec1 = np.asarray(points[i]) - np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
-            vec2 = np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1]) - np.asarray(
-                points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
-            cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
-            if cos_theta < self.MIN_DISTINGUISH_ANGLE:
-                within_ball = MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1], self.MIN_BALL_RADIUS, 1)
-                if not within_ball:
-                    turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
-                    last_cos_theta = cos_theta
-                else:
-                    if cos_theta < last_cos_theta:
-                        turning_points.pop()
+
+            if i < len(points) - self.NUM_OF_CONSECUTIVE_POINTS:
+                vec1 = np.asarray(points[i]) - np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
+                vec2 = np.asarray(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1]) - np.asarray(
+                    points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
+                cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
+                if cos_theta < self.MIN_DISTINGUISH_ANGLE:
+                    within_ball = MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1], self.MIN_BALL_RADIUS, 1)
+                    if not within_ball:
                         turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
                         last_cos_theta = cos_theta
+                    else:
+                        if cos_theta < last_cos_theta:
+                            turning_points.pop()
+                            turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
+                            last_cos_theta = cos_theta
         turning_points.append(points[-1])
         turning_points = np.asarray(turning_points)
+
+        self.area = 0.5 * abs(self.area)
         return turning_points
 
     def _approx_polygon(self, trajectory):

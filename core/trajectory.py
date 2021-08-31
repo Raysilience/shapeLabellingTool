@@ -17,7 +17,7 @@ from utils import MathUtil, ShapeUtil
 
 class Trajectory:
     def __init__(self, points, align_on=True):
-        self.points = points
+        self.points = np.asarray(points)
         self._is_align_on = align_on
         self.MAX_ALIGN_RADIAN = math.pi / 18
         self.MAX_PARALLEL_RADIAN = math.pi / 10
@@ -187,3 +187,7 @@ class Trajectory:
         tmp = tmp.astype(dtype=np.int32)
         trans = np.array(center, dtype=np.int32)
         return trans + tmp
+
+    def approx_circle(self):
+        center, radius = cv2.minEnclosingCircle(self.points)
+        return [int(x) for x in center], int(radius)

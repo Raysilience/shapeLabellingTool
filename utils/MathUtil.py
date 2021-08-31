@@ -84,3 +84,22 @@ def get_affine_matrix(radian):
 
 def calc_triangle_area(vec1, vec2):
     return 0.5 * np.cross(vec1, vec2)
+
+def calc_polygon_area_perimeter(vertices):
+    """
+    calculate area and perimeter of the polygon
+    :param vertices: numpy array of points in the clockwise of anti-clockwise order
+    :return: area, perimeter
+    """
+    if len(vertices) < 2:
+        return 0, 0
+    elif len(vertices) < 3:
+        return 0, np.linalg.norm(vertices[0]-vertices[1])
+    peri = 0
+    area = 0
+    for i in range(len(vertices)):
+        peri += np.linalg.norm(vertices[i-1] - vertices[i])
+        area += vertices[i-1][0] * vertices[i][1] - vertices[i][0] * vertices[i-1][1]
+    area = 0.5 * abs(area)
+
+    return area, peri
