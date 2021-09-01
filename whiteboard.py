@@ -37,7 +37,7 @@ class Whiteboard:
                 if cv2.waitKey(100) == 27:
                     break
         else:
-            self._draw_shape('', self.points)
+            self._draw_shape('', self.points, line_color=(255, 0, 255))
             label, pts = self.classifier.detect(self.points)
             logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
             self._draw_shape(label, pts)
@@ -57,11 +57,11 @@ class Whiteboard:
                 self._draw_shape(label, pts)
                 self.points.clear()
 
-    def _draw_shape(self, label, points):
+    def _draw_shape(self, label, points, line_color=(0, 255, 0), point_color=(0, 255, 0)):
         if points is not None:
             if label == 'circle':
-                cv2.circle(self.whiteboard, points[0], points[1], (0, 255, 0), 2)
+                cv2.circle(self.whiteboard, points[0], points[1], point_color, 2)
             else:
-                cv2.polylines(self.whiteboard, [points], True, (0, 255, 0), 2)
+                cv2.polylines(self.whiteboard, [points], True, line_color, 2)
                 for point in points:
-                    cv2.circle(self.whiteboard, point, 3, (0, 0, 255), 2)
+                    cv2.circle(self.whiteboard, point, 3, point_color, 2)

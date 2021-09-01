@@ -73,8 +73,8 @@ class Classifier:
             refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
             area_diff_ratio = abs(refined_area - self.area)/self.area
             logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
-            if area_diff_ratio > 0.3:
-                return self.LABELS[0], None
+            # if area_diff_ratio > 0.3:
+            #     return self.LABELS[0], None
             label = self.LABELS[len(pts)]
         return label, pts
 
@@ -85,7 +85,7 @@ class Classifier:
         match two trajectory. if they can concatenate into a closed convex shape return it otherwise store it
         in the parts
         :param trajectory: current trajectory to be matched
-        :return: points of a new shape if it meets requirements otherwise None
+        :return: test of a new shape if it meets requirements otherwise None
         """
         pts = None
         logging.debug("number of parts: {}\n".format(len(self.parts)))
