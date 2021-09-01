@@ -20,7 +20,7 @@ from core.trajectory import Trajectory
 class Classifier:
     def __init__(self):
         self.MIN_BALL_RADIUS = 40
-        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
+        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 8)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
         self.ALIGN_SHAPE = True
@@ -44,7 +44,7 @@ class Classifier:
         logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area, self.peri*self.peri/(self.area+1e-9)))
 
         # detect circle
-        if thinness < 13.89:
+        if thinness < 13.85:
             trajectory = Trajectory(points)
             center, radius = trajectory.approx_circle()
             label = self.LABELS[7]
@@ -70,11 +70,10 @@ class Classifier:
         if pts is None:
             label = self.LABELS[0]
         else:
-            refined_area, refined_peri = MathUtil.calc_polygon_area_perimeter(pts)
+            refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
             area_diff_ratio = abs(refined_area - self.area)/self.area
-            peri_diff_ration = abs(refined_peri - self.peri)/self.peri
-            logging.debug("\narea diff ratio: {}, \nperi diff ratio: {}".format(abs(refined_area - self.area)/self.area, abs(refined_peri - self.peri)/self.peri))
-            if area_diff_ratio > 0.2 or peri_diff_ration > 0.16:
+            logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
+            if area_diff_ratio > 0.3:
                 return self.LABELS[0], None
             label = self.LABELS[len(pts)]
         return label, pts
