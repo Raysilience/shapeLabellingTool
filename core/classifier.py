@@ -23,7 +23,7 @@ class Classifier:
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
-        self.ALIGN_SHAPE = True
+        self.ALIGN_SHAPE = False
 
         self.parts = set()
         self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
@@ -48,7 +48,7 @@ class Classifier:
             trajectory = Trajectory(points)
             center, radius = trajectory.approx_circle()
             label = self.LABELS[7]
-            return label, [center, radius]
+            return label, [int(center[0]), int(center[1]), int(radius)]
 
         else:
             trajectory = Trajectory(_points, self.ALIGN_SHAPE)
@@ -97,7 +97,7 @@ class Classifier:
                 if cnt_match == 1:
                     self.parts.add(traj)
                 elif cnt_match == 2:
-                    pts = ShapeUtil.align_shape(traj.points, traj.MAX_ALIGN_RADIAN)
+                    pts = ShapeUtil.align_shape(traj.points, traj.MAX_ALIGN_RADIAN) if self.ALIGN_SHAPE else traj.points
                     self.parts.remove(part)
         return pts
 
