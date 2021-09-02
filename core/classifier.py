@@ -20,7 +20,7 @@ from core.trajectory import Trajectory
 class Classifier:
     def __init__(self):
         self.MIN_BALL_RADIUS = 40
-        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 8)
+        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
         self.ALIGN_SHAPE = True
