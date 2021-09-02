@@ -57,10 +57,10 @@ class Whiteboard:
                 self._draw_shape(label, pts)
                 self.points.clear()
 
-    def _draw_shape(self, label, points, line_color=(0, 255, 0), point_color=(0, 255, 0)):
+    def _draw_shape(self, label, points, line_color=(0, 255, 0), point_color=(0, 0, 255)):
         if points is not None:
             if label == 'circle':
-                cv2.circle(self.whiteboard, points[0], points[1], point_color, 2)
+                cv2.circle(self.whiteboard, points[0], points[1], line_color, 2)
             else:
                 cv2.polylines(self.whiteboard, [points], True, line_color, 2)
                 for point in points:
