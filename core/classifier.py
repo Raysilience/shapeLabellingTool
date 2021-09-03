@@ -26,7 +26,7 @@ class Classifier:
         self.ALIGN_SHAPE = False
 
         self.parts = set()
-        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'rectangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
         self.peri = 0
         self.area = 0
 
@@ -44,11 +44,11 @@ class Classifier:
         logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area, self.peri*self.peri/(self.area+1e-9)))
 
         # detect circle
-        if thinness < 13.85:
+        if 12.56 < thinness < 13.85:
             trajectory = Trajectory(points)
             center, radius = trajectory.approx_circle()
             label = self.LABELS[7]
-            return label, [int(center[0]), int(center[1]), int(radius)]
+            return label, np.array([center[0], center[1], radius], dtype=np.int32)
 
         else:
             trajectory = Trajectory(_points, self.ALIGN_SHAPE)

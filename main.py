@@ -1,6 +1,6 @@
 import logging
 
-from gameboard import Gameboard
+from board.gameboard import Gameboard
 
 
 if __name__ == '__main__':
