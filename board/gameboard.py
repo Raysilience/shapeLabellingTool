@@ -45,40 +45,41 @@ class Gameboard:
         pygame.display.set_caption(self.NAME)
         self.font = pygame.font.Font(None, 60)
 
-        self.PANEL_WIDTH = 1300
+        self.PANEL_WIDTH = 1350
 
-        self.all_btns = pygame.sprite.Group()
-        self.btn_assist = Button(1740, 135, './res/assist_on.jpg', './res/assist_off.jpg')
-        self.btn_reset = Button(1740, 270, './res/reset_on.jpg', './res/reset_off.jpg')
-        self.btn_save = Button(1500, 135, './res/save_on.jpg', './res/save_off.jpg')
-        self.btn_fix = Button(1500, 270, './res/hand_label_on.jpg', './res/hand_label_off.jpg')
+        self.all_btns = []
+        self.all_sprites = pygame.sprite.Group()
+        self.btn_assist = Button(1740, 135, './res/assist_on.jpg', './res/assist_off.jpg', 'assist', selected=True)
+        self.btn_reset = Button(1740, 270, './res/reset_on.jpg', './res/reset_off.jpg', 'reset')
+        self.btn_save = Button(1500, 135, './res/save_on.jpg', './res/save_off.jpg', 'save')
+        self.btn_fix = Button(1500, 270, './res/hand_label_on.jpg', './res/hand_label_off.jpg', 'fix')
 
-        self.btn_unknown = Button(1500, 450, './res/unknown_on.jpg', './res/unknown_off.jpg')
-        self.btn_ellipse = Button(1500, 585, './res/ellipse_on.jpg', './res/ellipse_off.jpg')
-        self.btn_circle = Button(1500, 720, './res/circle_on.jpg', './res/circle_off.jpg')
-        self.btn_line = Button(1500, 855, './res/line_on.jpg', './res/line_off.jpg')
-        self.btn_form = Button(1500, 990, './res/form_on.jpg', './res/form_off.jpg')
-        self.btn_tri = Button(1740, 585, './res/tri_on.jpg', './res/tri_off.jpg')
-        self.btn_quad = Button(1740, 720, './res/quad_on.jpg', './res/quad_off.jpg')
-        self.btn_penta = Button(1740, 855, './res/penta_on.jpg', './res/penta_off.jpg')
-        self.btn_hex = Button(1740, 990, './res/hex_on.jpg', './res/hex_off.jpg')
+        self.btn_unknown = Button(1500, 450, './res/unknown_on.jpg', './res/unknown_off.jpg', 'unknown')
+        self.btn_ellipse = Button(1500, 585, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
+        self.btn_circle = Button(1500, 720, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
+        self.btn_line = Button(1500, 855, './res/line_on.jpg', './res/line_off.jpg', 'line')
+        self.btn_form = Button(1500, 990, './res/form_on.jpg', './res/form_off.jpg', 'form')
+        self.btn_tri = Button(1740, 585, './res/tri_on.jpg', './res/tri_off.jpg', 'tri')
+        self.btn_quad = Button(1740, 720, './res/quad_on.jpg', './res/quad_off.jpg', 'quad')
+        self.btn_penta = Button(1740, 855, './res/penta_on.jpg', './res/penta_off.jpg', 'penta')
+        self.btn_hex = Button(1740, 990, './res/hex_on.jpg', './res/hex_off.jpg', 'hex')
 
+        self.all_btns.append(self.btn_assist)
+        self.all_btns.append(self.btn_reset)
+        self.all_btns.append(self.btn_save)
+        self.all_btns.append(self.btn_fix)
+        self.all_btns.append(self.btn_line)
+        self.all_btns.append(self.btn_tri)
+        self.all_btns.append(self.btn_quad)
+        self.all_btns.append(self.btn_penta)
+        self.all_btns.append(self.btn_hex)
+        self.all_btns.append(self.btn_circle)
+        self.all_btns.append(self.btn_ellipse)
+        self.all_btns.append(self.btn_form)
+        self.all_btns.append(self.btn_unknown)
 
-        self.all_btns.add(self.btn_assist)
-        self.all_btns.add(self.btn_reset)
-        self.all_btns.add(self.btn_save)
-        self.all_btns.add(self.btn_fix)
-        self.all_btns.add(self.btn_line)
-        self.all_btns.add(self.btn_tri)
-        self.all_btns.add(self.btn_quad)
-        self.all_btns.add(self.btn_penta)
-        self.all_btns.add(self.btn_hex)
-        self.all_btns.add(self.btn_circle)
-        self.all_btns.add(self.btn_ellipse)
-        self.all_btns.add(self.btn_form)
-        self.all_btns.add(self.btn_unknown)
-
-
+        for btn in self.all_btns:
+            self.all_sprites.add(btn)
 
     def set_points(self, points):
         self.points = points
@@ -124,6 +125,26 @@ class Gameboard:
                         logging.debug("pos: {}".format(event.pos))
                         for btn in self.all_btns:
                             btn.update(pos=event.pos)
+                            is_check = btn.get_state()
+                            name = btn.get_name()
+                            if is_check:
+                                if name == 'reset':
+                                    self._reset_board()
+                                elif name == 'save':
+                                    print(self.res)
+                                    self._save_result()
+                                    self._reset_board()
+                                elif name == 'assist':
+                                    self.auto_label = not self.auto_label
+                                elif name == 'fix':
+                                    self.board.fill(self.WHITE)
+                                    self.fix_label = True
+                                    self.res['descriptor'].clear()
+                                    for l in self.res['line']:
+                                        for p in l:
+                                            pygame.draw.circle(self.board, self.BLUE, p, 3)
+                                else:
+                                    self.res['label'] = name
 
                 else:
                     if self.fix_label:
@@ -146,7 +167,7 @@ class Gameboard:
                                 self._draw_result(label, pts)
                             self.points.clear()
 
-            self.all_btns.draw(self.board)
+            self.all_sprites.draw(self.board)
             pygame.display.flip()
 
     def _draw_result(self, label, pts):
