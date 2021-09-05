@@ -85,6 +85,7 @@ def get_affine_matrix(radian):
 def calc_triangle_area(vec1, vec2):
     return 0.5 * np.cross(vec1, vec2)
 
+
 def calc_polygon_area_perimeter(vertices):
     """
     calculate area and perimeter of the polygon

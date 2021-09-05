@@ -22,7 +22,7 @@ from utils import FileUtil
 
 
 class Gameboard:
-    def __init__(self, width=1920, height=1080, mode='interactive') -> None:
+    def __init__(self, width=1280, height=720, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
         self.BLUE = (0, 0, 255)
@@ -41,28 +41,28 @@ class Gameboard:
         self.board_width = width
         self.board_height = height
         self.board = pygame.display.set_mode((self.board_width, self.board_height))
-        self.board.fill(self.WHITE)
         pygame.display.set_caption(self.NAME)
         self.font = pygame.font.Font(None, 60)
+        self.PANEL_WIDTH = 1350/1920*self.board_width
+        self.board.fill(self.WHITE)
 
-        self.PANEL_WIDTH = 1350
 
         self.all_btns = []
         self.all_sprites = pygame.sprite.Group()
-        self.btn_assist = Button(1740, 135, './res/assist_on.jpg', './res/assist_off.jpg', 'assist', selected=True)
-        self.btn_reset = Button(1740, 270, './res/reset_on.jpg', './res/reset_off.jpg', 'reset')
-        self.btn_save = Button(1500, 135, './res/save_on.jpg', './res/save_off.jpg', 'save')
-        self.btn_fix = Button(1500, 270, './res/hand_label_on.jpg', './res/hand_label_off.jpg', 'fix')
+        self.btn_assist = Button(1740/1920*self.board_width, 135/1080*self.board_height, './res/assist_on.jpg', './res/assist_off.jpg', 'assist', selected=True)
+        self.btn_reset = Button(1740/1920*self.board_width, 270/1080*self.board_height, './res/reset_on.jpg', './res/reset_off.jpg', 'reset')
+        self.btn_save = Button(1500/1920*self.board_width, 135/1080*self.board_height, './res/save_on.jpg', './res/save_off.jpg', 'save')
+        self.btn_fix = Button(1500/1920*self.board_width, 270/1080*self.board_height, './res/hand_label_on.jpg', './res/hand_label_off.jpg', 'fix')
 
-        self.btn_unknown = Button(1500, 450, './res/unknown_on.jpg', './res/unknown_off.jpg', 'unknown')
-        self.btn_ellipse = Button(1500, 585, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
-        self.btn_circle = Button(1500, 720, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
-        self.btn_line = Button(1500, 855, './res/line_on.jpg', './res/line_off.jpg', 'line')
-        self.btn_form = Button(1500, 990, './res/form_on.jpg', './res/form_off.jpg', 'form')
-        self.btn_tri = Button(1740, 585, './res/tri_on.jpg', './res/tri_off.jpg', 'tri')
-        self.btn_quad = Button(1740, 720, './res/quad_on.jpg', './res/quad_off.jpg', 'quad')
-        self.btn_penta = Button(1740, 855, './res/penta_on.jpg', './res/penta_off.jpg', 'penta')
-        self.btn_hex = Button(1740, 990, './res/hex_on.jpg', './res/hex_off.jpg', 'hex')
+        self.btn_unknown = Button(1500/1920*self.board_width, 450/1080*self.board_height, './res/unknown_on.jpg', './res/unknown_off.jpg', 'unknown')
+        self.btn_ellipse = Button(1500/1920*self.board_width, 585/1080*self.board_height, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
+        self.btn_circle = Button(1500/1920*self.board_width, 720/1080*self.board_height, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
+        self.btn_line = Button(1500/1920*self.board_width, 855/1080*self.board_height, './res/line_on.jpg', './res/line_off.jpg', 'line')
+        self.btn_form = Button(1500/1920*self.board_width, 990/1080*self.board_height, './res/form_on.jpg', './res/form_off.jpg', 'form')
+        self.btn_tri = Button(1740/1920*self.board_width, 585/1080*self.board_height, './res/tri_on.jpg', './res/tri_off.jpg', 'tri')
+        self.btn_quad = Button(1740/1920*self.board_width, 720/1080*self.board_height, './res/quad_on.jpg', './res/quad_off.jpg', 'quad')
+        self.btn_penta = Button(1740/1920*self.board_width, 855/1080*self.board_height, './res/penta_on.jpg', './res/penta_off.jpg', 'penta')
+        self.btn_hex = Button(1740/1920*self.board_width, 990/1080*self.board_height, './res/hex_on.jpg', './res/hex_off.jpg', 'hex')
 
         self.all_btns.append(self.btn_assist)
         self.all_btns.append(self.btn_reset)
@@ -81,6 +81,8 @@ class Gameboard:
         for btn in self.all_btns:
             self.all_sprites.add(btn)
 
+        self.all_labels = set(self.all_btns[4:])
+
     def set_points(self, points):
         self.points = points
 
@@ -95,48 +97,65 @@ class Gameboard:
 
                 if event.type == pygame.KEYDOWN:
                     logging.debug("pressed key: {}".format(event.key))
-
-                    # esc
+                    # esc: exit
                     if event.key == 27:
                         pygame.quit()
                         sys.exit()
 
-                    # whitespace
-                    elif event.key == 32:
-                        self.board.fill(self.WHITE)
+                    # whitespace: fix
+                    if event.key == 32:
+                        self.btn_fix.set_state(True)
                         self.fix_label = True
+                        self.board.fill(self.WHITE)
                         self.res['descriptor'].clear()
                         for l in self.res['line']:
                             for p in l:
                                 pygame.draw.circle(self.board, self.BLUE, p, 3)
 
-                    # c: clear
+                    # c: clear canvas and reset
                     elif event.key == 99:
+                        self.btn_reset.set_state(True)
                         self._reset_board()
+
 
                     # s: save
                     elif event.key == 115:
                         print(self.res)
+                        self.btn_save.set_state(True)
                         self._save_result()
                         self._reset_board()
+
+                elif event.type == pygame.KEYUP:
+                    # c: clear
+                    if event.key == 99:
+                        self.btn_reset.set_state(False)
+                        self.btn_fix.set_state(False)
+
+                    # s: save
+                    elif event.key == 115:
+                        self.btn_save.set_state(False)
+                        self.btn_fix.set_state(False)
+
 
                 if pygame.mouse.get_pos()[0] > self.PANEL_WIDTH:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         logging.debug("pos: {}".format(event.pos))
                         for btn in self.all_btns:
-                            btn.update(pos=event.pos)
-                            is_check = btn.get_state()
-                            name = btn.get_name()
-                            if is_check:
+                            if btn.mouse_hover(event.pos):
+                                name = btn.get_name()
                                 if name == 'reset':
+                                    btn.set_state(True)
                                     self._reset_board()
                                 elif name == 'save':
                                     print(self.res)
+                                    btn.set_state(True)
                                     self._save_result()
                                     self._reset_board()
                                 elif name == 'assist':
+                                    btn.switch_state()
                                     self.auto_label = not self.auto_label
                                 elif name == 'fix':
+                                    btn.set_state(True)
                                     self.board.fill(self.WHITE)
                                     self.fix_label = True
                                     self.res['descriptor'].clear()
@@ -144,7 +163,25 @@ class Gameboard:
                                         for p in l:
                                             pygame.draw.circle(self.board, self.BLUE, p, 3)
                                 else:
-                                    self.res['label'] = name
+                                    btn.switch_state()
+                                    if btn.get_state():
+                                        self.res['label'] = name
+                                        for b in self.all_labels:
+                                            if b != btn:
+                                                b.set_state(False)
+
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        for btn in self.all_btns:
+                            if btn.mouse_hover(event.pos):
+                                name = btn.get_name()
+                                if name == 'reset':
+                                    btn.set_state(False)
+                                    self.btn_fix.set_state(False)
+
+                                elif name == 'save':
+                                    btn.set_state(False)
+                                    self.btn_fix.set_state(False)
+
 
                 else:
                     if self.fix_label:
@@ -159,7 +196,7 @@ class Gameboard:
 
                         elif event.type == pygame.MOUSEBUTTONUP:
                             self.res['line'].append(list(self.points))
-                            if len(self.points) > 2:
+                            if self.auto_label and len(self.points) > 2:
                                 label, pts = self.classifier.detect(self.points)
                                 logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                                 self.res['label'] = label
@@ -169,6 +206,7 @@ class Gameboard:
 
             self.all_sprites.draw(self.board)
             pygame.display.flip()
+
 
     def _draw_result(self, label, pts):
         label_img = self.font.render(label, True, self.RED, self.WHITE)
@@ -186,9 +224,11 @@ class Gameboard:
 
     def _reset_board(self):
         self.board.fill(self.WHITE)
-        self.fix_label = not self.auto_label
         self.res = {'label': 'unknown', 'descriptor': [], 'line': []}
         self.points.clear()
+        self.fix_label = False
+
+        print(self.fix_label)
 
     def _save_result(self):
         FileUtil.mkdir(self.SAVE_DIR)

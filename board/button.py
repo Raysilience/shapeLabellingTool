@@ -42,22 +42,28 @@ class Button(pygame.sprite.Sprite):
 
 
     def update(self, *args, **kwargs) -> None:
-        if 'pos' in kwargs and self._mouse_hover(kwargs['pos']):
-            self.selected = not self.selected
+        if 'pos' in kwargs and self.mouse_hover(kwargs['pos']):
+            self.switch_state()
 
-        if self.selected:
-            self.image = self.img_check
-        else:
-            self.image = self.img_uncheck
-
-        return
-
-    def _mouse_hover(self, pos):
+    def mouse_hover(self, pos):
         mouse_x, mouse_y = pos
         return self.xmin < mouse_x < self.xmax and self.ymin < mouse_y < self.ymax
 
     def get_state(self):
         return self.selected
 
+    def set_state(self, flag):
+        self.selected = flag
+        if self.selected:
+            self.image = self.img_check
+        else:
+            self.image = self.img_uncheck
+
+    def switch_state(self):
+        self.set_state(not self.selected)
+
     def get_name(self):
         return self.name
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)

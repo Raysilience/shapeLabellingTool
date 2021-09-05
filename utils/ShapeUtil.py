@@ -83,3 +83,4 @@ def align_shape(vertices, epsilon):
 def check_parallel(p0, p1, p2, p3, epsilon_rad):
     rad = MathUtil.calc_sin_angle(p0 - p1, p2 - p3)
     return abs(rad - math.pi) < math.sin(epsilon_rad)
+
