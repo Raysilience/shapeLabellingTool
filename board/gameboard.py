@@ -22,7 +22,7 @@ from utils import FileUtil
 
 
 class Gameboard:
-    def __init__(self, width=1280, height=720, mode='interactive') -> None:
+    def __init__(self, width=1920, height=1080, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
         self.BLUE = (0, 0, 255)
@@ -68,6 +68,8 @@ class Gameboard:
         self.all_btns.append(self.btn_reset)
         self.all_btns.append(self.btn_save)
         self.all_btns.append(self.btn_fix)
+        self.all_btns.append(self.btn_unknown)
+        self.all_btns.append(self.btn_form)
         self.all_btns.append(self.btn_line)
         self.all_btns.append(self.btn_tri)
         self.all_btns.append(self.btn_quad)
@@ -75,13 +77,14 @@ class Gameboard:
         self.all_btns.append(self.btn_hex)
         self.all_btns.append(self.btn_circle)
         self.all_btns.append(self.btn_ellipse)
-        self.all_btns.append(self.btn_form)
-        self.all_btns.append(self.btn_unknown)
 
         for btn in self.all_btns:
             self.all_sprites.add(btn)
 
-        self.all_labels = set(self.all_btns[4:])
+        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
+        self.label_to_btn = dict(zip(self.LABELS, self.all_btns[4:]))
+        self.all_labels = self.all_btns[4:]
+
 
     def set_points(self, points):
         self.points = points
@@ -198,6 +201,7 @@ class Gameboard:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
                                 label, pts = self.classifier.detect(self.points)
+                                self.label_to_btn[label].set_state(True)
                                 logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                                 self.res['label'] = label
                                 self.res['descriptor'] = pts.tolist() if pts is not None else []
@@ -228,7 +232,8 @@ class Gameboard:
         self.points.clear()
         self.fix_label = False
 
-        print(self.fix_label)
+        for btn in self.all_labels:
+            btn.set_state(False)
 
     def _save_result(self):
         FileUtil.mkdir(self.SAVE_DIR)
