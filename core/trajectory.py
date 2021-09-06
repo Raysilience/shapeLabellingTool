@@ -40,8 +40,6 @@ class Trajectory:
         """
         determine whether the beginning segment is parallel with the end segment if vec is None, otherwise,
         determine whether the vec is parallel with either beginning or end segment
-        :param begin: compare the beginning or the end of points
-        :param traj: segment of another trajectory
         :return: True if parallel otherwise False
         """
         if self.get_length() < 4:
