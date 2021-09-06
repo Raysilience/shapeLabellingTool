@@ -26,11 +26,10 @@ class Classifier:
         self.ALIGN_SHAPE = False
 
         self.parts = set()
-        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle', 'ellipse']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle',
+                       'ellipse']
         self.peri = 0
         self.area = 0
-
-
 
     def detect(self, points):
         """
@@ -39,9 +38,11 @@ class Classifier:
         :return: label and vector points if any; otherwise, None
         """
         pts = None
+        custom_pts = None
         _points = self._find_turning_points(points)
         thinness = self.peri * self.peri / (self.area + 1e-9)
-        logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area, self.peri*self.peri/(self.area+1e-9)))
+        logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area,
+                                                                   self.peri * self.peri / (self.area + 1e-9)))
 
         # detect circle
         if 12.56 < thinness < 13.85:
@@ -53,7 +54,6 @@ class Classifier:
         else:
             trajectory = Trajectory(_points, self.ALIGN_SHAPE)
 
-
         # one touch drawing
         if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
             if ShapeUtil.is_convex(_points[:-1]):
@@ -62,22 +62,31 @@ class Classifier:
         # multi touches drawing
         else:
             if ShapeUtil.is_convex(_points):
+                custom_pts = self._approx_customized_shape(trajectory)
+                logging.debug("customize pts: {}".format(custom_pts))
+
                 pts = self._match_trajectory(trajectory)
                 # pts could not form a polygon add it to part
                 if pts is None:
                     self.parts.add(trajectory)
 
         if pts is None:
-            label = self.LABELS[0]
+            if custom_pts is None:
+                label = self.LABELS[0]
+            else:
+                if len(custom_pts) == 2:
+                    label = self.LABELS[2]
+                else:
+                    label = self.LABELS[1]
+                pts = custom_pts
         else:
             refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
-            area_diff_ratio = abs(refined_area - self.area)/self.area
+            area_diff_ratio = abs(refined_area - self.area) / self.area
             logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
-            # if area_diff_ratio > 0.3:
-            #     return self.LABELS[0], None
+            if area_diff_ratio > 0.3:
+                return self.LABELS[0], None
             label = self.LABELS[len(pts)]
         return label, pts
-
 
     # Todo: optimize matching process with bisection
     def _match_trajectory(self, trajectory):
@@ -116,7 +125,7 @@ class Classifier:
             return turning_points
         for i in range(len(points)):
             self.peri += np.linalg.norm(np.asarray(points[i - 1]) - np.asarray(points[i]))
-            self.area += points[i-1][0] * points[i][1] - points[i][0] * points[i-1][1]
+            self.area += points[i - 1][0] * points[i][1] - points[i][0] * points[i - 1][1]
             if i == 0:
                 turning_points.append(points[i])
                 continue
@@ -127,7 +136,9 @@ class Classifier:
                     points[i + self.NUM_OF_CONSECUTIVE_POINTS - 1])
                 cos_theta = MathUtil.calc_cos_angle(vec1, vec2)
                 if cos_theta < self.MIN_DISTINGUISH_ANGLE:
-                    within_ball = MathUtil.within_ball(turning_points[-1], points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1], self.MIN_BALL_RADIUS, 1)
+                    within_ball = MathUtil.within_ball(turning_points[-1],
+                                                       points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1],
+                                                       self.MIN_BALL_RADIUS, 1)
                     if not within_ball:
                         turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
                         last_cos_theta = cos_theta
@@ -181,3 +192,23 @@ class Classifier:
         else:
             logging.info("reach the maximum of turning points, fail to detect")
         return None
+
+    def _approx_customized_shape(self, trajectory):
+        logging.debug("into customize")
+
+        if trajectory.get_length() == 2:
+            if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]), np.array([0, 1]),
+                                        trajectory.MAX_PARALLEL_RADIAN) or \
+                    ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
+                                             np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
+                return trajectory.points
+        elif trajectory.get_length() == 4:
+            if trajectory.is_parallel():
+                if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
+                                            np.array([0, 1]), trajectory.MAX_PARALLEL_RADIAN) or \
+                        ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
+                                                 np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
+                    if abs(trajectory.points[0][0] - trajectory.points[-1][0]) < 20 or abs(trajectory.points[0][1] - trajectory.points[-1][1]) < 20:
+                        return trajectory.points
+        else:
+            return None

@@ -20,7 +20,7 @@ class Trajectory:
         self.points = np.asarray(points)
         self._is_align_on = align_on
         self.MAX_ALIGN_RADIAN = math.pi / 18
-        self.MAX_PARALLEL_RADIAN = math.pi / 10
+        self.MAX_PARALLEL_RADIAN = math.pi / 15
         self.MAX_PARALLEL_SIN = math.sin(self.MAX_PARALLEL_RADIAN)
         self.MAX_MATCH_DISTANCE = 20
 

@@ -21,7 +21,7 @@ class Button(pygame.sprite.Sprite):
         self.RED = (255, 0, 0)
 
         self.selected = selected
-        self.font = pygame.font.Font(None, 60)
+        self.font = pygame.font.SysFont("segoe ui", 60)
         self.img_check = pygame.image.load(img_check_path).convert()
         self.img_uncheck = pygame.image.load(img_uncheck_path).convert()
         if self.selected:

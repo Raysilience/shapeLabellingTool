@@ -25,7 +25,7 @@ class Gameboard:
     def __init__(self, width=1920, height=1080, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
-        self.BLUE = (0, 0, 255)
+        self.BLUE = (153, 153, 255)
         self.RED = (255, 0, 0)
 
         self.classifier = Classifier()
@@ -33,7 +33,7 @@ class Gameboard:
         self.points = []
         self.auto_label = True
         self.fix_label = False
-        self.SAVE_DIR = '../output'
+        self.SAVE_DIR = './output'
         self.MAX_FIX_DIST = 20
 
         pygame.init()
@@ -42,7 +42,7 @@ class Gameboard:
         self.board_height = height
         self.board = pygame.display.set_mode((self.board_width, self.board_height))
         pygame.display.set_caption(self.NAME)
-        self.font = pygame.font.Font(None, 60)
+        self.font = pygame.font.SysFont("segoe ui", 60)
         self.PANEL_WIDTH = 1350/1920*self.board_width
         self.board.fill(self.WHITE)
 
@@ -58,11 +58,11 @@ class Gameboard:
         self.btn_ellipse = Button(1500/1920*self.board_width, 585/1080*self.board_height, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
         self.btn_circle = Button(1500/1920*self.board_width, 720/1080*self.board_height, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
         self.btn_line = Button(1500/1920*self.board_width, 855/1080*self.board_height, './res/line_on.jpg', './res/line_off.jpg', 'line')
-        self.btn_form = Button(1500/1920*self.board_width, 990/1080*self.board_height, './res/form_on.jpg', './res/form_off.jpg', 'form')
-        self.btn_tri = Button(1740/1920*self.board_width, 585/1080*self.board_height, './res/tri_on.jpg', './res/tri_off.jpg', 'tri')
-        self.btn_quad = Button(1740/1920*self.board_width, 720/1080*self.board_height, './res/quad_on.jpg', './res/quad_off.jpg', 'quad')
-        self.btn_penta = Button(1740/1920*self.board_width, 855/1080*self.board_height, './res/penta_on.jpg', './res/penta_off.jpg', 'penta')
-        self.btn_hex = Button(1740/1920*self.board_width, 990/1080*self.board_height, './res/hex_on.jpg', './res/hex_off.jpg', 'hex')
+        self.btn_form = Button(1500/1920*self.board_width, 990/1080*self.board_height, './res/form_on.jpg', './res/form_off.jpg', 'form_extension')
+        self.btn_tri = Button(1740/1920*self.board_width, 585/1080*self.board_height, './res/tri_on.jpg', './res/tri_off.jpg', 'triangle')
+        self.btn_quad = Button(1740/1920*self.board_width, 720/1080*self.board_height, './res/quad_on.jpg', './res/quad_off.jpg', 'quadrangle')
+        self.btn_penta = Button(1740/1920*self.board_width, 855/1080*self.board_height, './res/penta_on.jpg', './res/penta_off.jpg', 'pentagon')
+        self.btn_hex = Button(1740/1920*self.board_width, 990/1080*self.board_height, './res/hex_on.jpg', './res/hex_off.jpg', 'hexagon')
 
         self.all_btns.append(self.btn_assist)
         self.all_btns.append(self.btn_reset)
@@ -139,7 +139,6 @@ class Gameboard:
                         self.btn_save.set_state(False)
                         self.btn_fix.set_state(False)
 
-
                 if pygame.mouse.get_pos()[0] > self.PANEL_WIDTH:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         logging.debug("pos: {}".format(event.pos))
@@ -185,7 +184,6 @@ class Gameboard:
                                     btn.set_state(False)
                                     self.btn_fix.set_state(False)
 
-
                 else:
                     if self.fix_label:
                         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -213,6 +211,7 @@ class Gameboard:
 
 
     def _draw_result(self, label, pts):
+        pygame.draw.rect(self.board, self.WHITE, (10, 90, 350, 60), width=0)
         label_img = self.font.render(label, True, self.RED, self.WHITE)
         self.board.blit(label_img, (10, 100))
         if label == 'unknown':
