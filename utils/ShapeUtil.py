@@ -84,3 +84,20 @@ def check_parallel(p0, p1, p2, p3, epsilon_rad):
     rad = MathUtil.calc_sin_angle(p0 - p1, p2 - p3)
     return abs(rad) < math.sin(epsilon_rad)
 
+
+def approx_circle(points):
+    """
+    approximate circle from a bunch of points
+    :param points: sampling points in the form of numpy array
+    :return: center_x, center_y, radius
+    """
+    center, radius = cv2.minEnclosingCircle(points)
+    return [int(x) for x in center], int(radius)
+
+def approx_ellipse(points):
+    """
+    approximate ellipse from a bunch of points
+    :param points: sampling points in the form of numpy array
+    :return: center_x, center_y, axis_width, axis_height, angle
+    """
+    return cv2.fitEllipse(points)
