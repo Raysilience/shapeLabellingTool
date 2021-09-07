@@ -22,7 +22,7 @@ from utils import FileUtil
 
 
 class Gameboard:
-    def __init__(self, width=1920, height=1080, mode='interactive') -> None:
+    def __init__(self, width=1280, height=720, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
         self.BLUE = (153, 153, 255)
@@ -43,26 +43,27 @@ class Gameboard:
         self.board = pygame.display.set_mode((self.board_width, self.board_height))
         pygame.display.set_caption(self.NAME)
         self.font = pygame.font.SysFont("segoe ui", 60)
-        self.PANEL_WIDTH = 1350/1920*self.board_width
+        self.PANEL_WIDTH = 1350
+        self.scale = self.board_width/1920
         self.board.fill(self.WHITE)
 
 
         self.all_btns = []
         self.all_sprites = pygame.sprite.Group()
-        self.btn_assist = Button(1740/1920*self.board_width, 135/1080*self.board_height, './res/assist_on.jpg', './res/assist_off.jpg', 'assist', selected=True)
-        self.btn_reset = Button(1740/1920*self.board_width, 270/1080*self.board_height, './res/reset_on.jpg', './res/reset_off.jpg', 'reset')
-        self.btn_save = Button(1500/1920*self.board_width, 135/1080*self.board_height, './res/save_on.jpg', './res/save_off.jpg', 'save')
-        self.btn_fix = Button(1500/1920*self.board_width, 270/1080*self.board_height, './res/hand_label_on.jpg', './res/hand_label_off.jpg', 'fix')
+        self.btn_assist = Button(1740/1920*self.board_width, 135/1080*self.board_height, self.scale,  './res/assist_on.jpg', './res/assist_off.jpg', 'assist', selected=True)
+        self.btn_reset = Button(1740/1920*self.board_width, 270/1080*self.board_height, self.scale, './res/reset_on.jpg', './res/reset_off.jpg', 'reset')
+        self.btn_save = Button(1500/1920*self.board_width, 135/1080*self.board_height, self.scale, './res/save_on.jpg', './res/save_off.jpg', 'save')
+        self.btn_fix = Button(1500/1920*self.board_width, 270/1080*self.board_height, self.scale, './res/hand_label_on.jpg', './res/hand_label_off.jpg', 'fix')
 
-        self.btn_unknown = Button(1500/1920*self.board_width, 450/1080*self.board_height, './res/unknown_on.jpg', './res/unknown_off.jpg', 'unknown')
-        self.btn_ellipse = Button(1500/1920*self.board_width, 585/1080*self.board_height, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
-        self.btn_circle = Button(1500/1920*self.board_width, 720/1080*self.board_height, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
-        self.btn_line = Button(1500/1920*self.board_width, 855/1080*self.board_height, './res/line_on.jpg', './res/line_off.jpg', 'line')
-        self.btn_form = Button(1500/1920*self.board_width, 990/1080*self.board_height, './res/form_on.jpg', './res/form_off.jpg', 'form_extension')
-        self.btn_tri = Button(1740/1920*self.board_width, 585/1080*self.board_height, './res/tri_on.jpg', './res/tri_off.jpg', 'triangle')
-        self.btn_quad = Button(1740/1920*self.board_width, 720/1080*self.board_height, './res/quad_on.jpg', './res/quad_off.jpg', 'quadrangle')
-        self.btn_penta = Button(1740/1920*self.board_width, 855/1080*self.board_height, './res/penta_on.jpg', './res/penta_off.jpg', 'pentagon')
-        self.btn_hex = Button(1740/1920*self.board_width, 990/1080*self.board_height, './res/hex_on.jpg', './res/hex_off.jpg', 'hexagon')
+        self.btn_unknown = Button(1500/1920*self.board_width, 450/1080*self.board_height, self.scale, './res/unknown_on.jpg', './res/unknown_off.jpg', 'unknown')
+        self.btn_ellipse = Button(1500/1920*self.board_width, 585/1080*self.board_height, self.scale, './res/ellipse_on.jpg', './res/ellipse_off.jpg', 'ellipse')
+        self.btn_circle = Button(1500/1920*self.board_width, 720/1080*self.board_height, self.scale, './res/circle_on.jpg', './res/circle_off.jpg', 'circle')
+        self.btn_line = Button(1500/1920*self.board_width, 855/1080*self.board_height, self.scale, './res/line_on.jpg', './res/line_off.jpg', 'line')
+        self.btn_form = Button(1500/1920*self.board_width, 990/1080*self.board_height, self.scale, './res/form_on.jpg', './res/form_off.jpg', 'form_extension')
+        self.btn_tri = Button(1740/1920*self.board_width, 585/1080*self.board_height, self.scale, './res/tri_on.jpg', './res/tri_off.jpg', 'triangle')
+        self.btn_quad = Button(1740/1920*self.board_width, 720/1080*self.board_height, self.scale, './res/quad_on.jpg', './res/quad_off.jpg', 'quadrangle')
+        self.btn_penta = Button(1740/1920*self.board_width, 855/1080*self.board_height, self.scale, './res/penta_on.jpg', './res/penta_off.jpg', 'pentagon')
+        self.btn_hex = Button(1740/1920*self.board_width, 990/1080*self.board_height, self.scale, './res/hex_on.jpg', './res/hex_off.jpg', 'hexagon')
 
         self.all_btns.append(self.btn_assist)
         self.all_btns.append(self.btn_reset)
@@ -139,7 +140,7 @@ class Gameboard:
                         self.btn_save.set_state(False)
                         self.btn_fix.set_state(False)
 
-                if pygame.mouse.get_pos()[0] > self.PANEL_WIDTH:
+                if pygame.mouse.get_pos()[0] > self.PANEL_WIDTH * self.scale:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         logging.debug("pos: {}".format(event.pos))
                         for btn in self.all_btns:
