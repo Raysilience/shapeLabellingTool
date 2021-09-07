@@ -32,7 +32,6 @@ def calc_sin_angle(vec1, vec2):
 
 def calc_radian(vec1, vec2):
     cos_theta = calc_cos_angle(vec1, vec2)
-    print(cos_theta)
     return math.acos(cos_theta)
 
 

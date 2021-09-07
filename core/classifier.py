@@ -19,7 +19,7 @@ from core.trajectory import Trajectory
 
 class Classifier:
     def __init__(self):
-        self.MIN_BALL_RADIUS = 40
+        self.MIN_BALL_RADIUS = 50
         self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
         self.NUM_OF_CONSECUTIVE_POINTS = 15
         self.MAX_CLOSED_FACTOR = 0.4
@@ -147,10 +147,13 @@ class Classifier:
                             turning_points.pop()
                             turning_points.append(points[i + self.NUM_OF_CONSECUTIVE_POINTS // 2 - 1])
                             last_cos_theta = cos_theta
-        turning_points.append(points[-1])
+
+        if not MathUtil.within_ball(turning_points[-1],points[-1], self.MIN_BALL_RADIUS, 1):
+            turning_points.append(points[-1])
         turning_points = np.asarray(turning_points)
 
         self.area = 0.5 * abs(self.area)
+
         return turning_points
 
     def _approx_polygon(self, trajectory):
