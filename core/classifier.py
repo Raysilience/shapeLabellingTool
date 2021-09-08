@@ -190,7 +190,7 @@ class Classifier:
                     ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                              np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
                 label = 'line'
-                descriptor = trajectory.points
+                descriptor = trajectory.points.tolist()
         elif trajectory.get_length() == 4:
             if trajectory.is_parallel():
                 if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
@@ -199,6 +199,6 @@ class Classifier:
                                                  np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
                     if abs(trajectory.points[0][0] - trajectory.points[-1][0]) < 20 or abs(trajectory.points[0][1] - trajectory.points[-1][1]) < 20:
                         label =  'form_extension'
-                        descriptor = trajectory.points
+                        descriptor = trajectory.points.tolist()
 
         return label, descriptor

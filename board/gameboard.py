@@ -208,7 +208,7 @@ class Gameboard:
                                 self.label_to_btn[label].set_state(True)
                                 logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                                 self.res['label'] = label
-                                self.res['descriptor'] = pts.tolist() if pts is not None else []
+                                self.res['descriptor'] = pts
                                 self._draw_result(label, pts)
                             self.points.clear()
 
