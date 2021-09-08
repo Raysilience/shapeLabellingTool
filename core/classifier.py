@@ -182,13 +182,15 @@ class Classifier:
 
     def detect_customized_shape(self, trajectory):
         logging.debug("into customize")
-
+        label = ''
+        descriptor = []
         if trajectory.get_length() == 2:
             if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]), np.array([0, 1]),
                                         trajectory.MAX_PARALLEL_RADIAN) or \
                     ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                              np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
-                return 'line', trajectory.points
+                label = 'line'
+                descriptor = trajectory.points
         elif trajectory.get_length() == 4:
             if trajectory.is_parallel():
                 if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
@@ -196,6 +198,7 @@ class Classifier:
                         ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                                  np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
                     if abs(trajectory.points[0][0] - trajectory.points[-1][0]) < 20 or abs(trajectory.points[0][1] - trajectory.points[-1][1]) < 20:
-                        return 'form_extension', trajectory.points
-        else:
-            return '', []
+                        label =  'form_extension'
+                        descriptor = trajectory.points
+
+        return label, descriptor
