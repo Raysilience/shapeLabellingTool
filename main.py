@@ -1,4 +1,5 @@
 import logging
+import math
 
 from board.gameboard import Gameboard
 
@@ -11,4 +12,3 @@ if __name__ == '__main__':
     whiteboard = Gameboard()
     # # whiteboard.set_points(pts)
     whiteboard.draw()
-
