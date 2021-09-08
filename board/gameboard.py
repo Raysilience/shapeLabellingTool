@@ -22,7 +22,7 @@ from utils import FileUtil
 
 
 class Gameboard:
-    def __init__(self, width=1280, height=720, mode='interactive') -> None:
+    def __init__(self, width=1920, height=1080, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 255, 0)
         self.BLUE = (153, 153, 255)

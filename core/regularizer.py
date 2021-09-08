@@ -22,7 +22,7 @@ class Regularizer:
         self.refined_polyline = refined_polyline
         self.original_sketch = original_sketch
 
-    def regularize(self):
+    def regularize(self, label, vertices):
         if self.type == 'triangle':
             pass
         elif self.type == 'rectangle':

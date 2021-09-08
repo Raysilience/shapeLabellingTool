@@ -39,7 +39,7 @@ class Classifier:
         """
         pts = None
         custom_pts = None
-        _points = self._find_turning_points(points)
+        _points = self.find_turning_points(points)
         thinness = self.peri * self.peri / (self.area + 1e-9)
         logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area,
                                                                    self.peri * self.peri / (self.area + 1e-9)))
@@ -88,6 +88,10 @@ class Classifier:
             label = self.LABELS[len(pts)]
         return label, pts
 
+
+    def detect_end2end(self, points):
+        pass
+
     # Todo: optimize matching process with bisection
     def _match_trajectory(self, trajectory):
         """
@@ -110,7 +114,7 @@ class Classifier:
                     self.parts.remove(part)
         return pts
 
-    def _find_turning_points(self, points):
+    def find_turning_points(self, points):
         """
         check graph convexity and find robust turning points in the graph
         :param points: sampling points

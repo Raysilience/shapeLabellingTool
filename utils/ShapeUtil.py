@@ -15,10 +15,11 @@ import numpy as np
 from utils import MathUtil
 
 
-def is_convex(vertices):
+def is_convex(vertices, eps=math.pi/6):
     """
     check whether all points of a closed graph could form a convex shape
     :param: vertices in the form of numpy array
+    :param: eps of relaxation radian
     :return: boolean
     """
     if len(vertices) < 2:
@@ -29,7 +30,7 @@ def is_convex(vertices):
     for i in range(len(vertices)):
         sum_radian += MathUtil.calc_radian(vertices[i - 2] - vertices[i - 1], vertices[i - 1] - vertices[i])
 
-    return abs(sum_radian - 2 * math.pi) < math.pi / 6
+    return abs(sum_radian - 2 * math.pi) < eps
 
 def get_rotation_rad(p0, p1):
     """
