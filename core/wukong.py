@@ -43,7 +43,7 @@ class Wukong:
 
         # one touch drawing
         if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
-            label = self.classifier.detect(trajectory)
+            label = self.classifier.detect_shape(trajectory)
             descriptor = self.fitter.fit(label, trajectory)
             # end-to-end strategy
             # label, descriptor = self.classifier.detect_end2end(trajectory)
@@ -52,15 +52,26 @@ class Wukong:
 
         # multi touches drawing
         else:
-            _points = self.classifier.find_turning_points(trajectory)
+            _points = self.classifier.find_turning_points(points)
+            trajectory = Trajectory(_points)
             if ShapeUtil.is_convex(_points, self.CONVEX_RELAXATION):
-                custom_pts = self._approx_customized_shape(trajectory)
+                custom_label, custom_descriptor = self.classifier.detect_customized_shape(trajectory)
 
-                pts = self._match_trajectory(trajectory)
-                # pts could not form a polygon add it to part
-                if pts is None:
-                    self.parts.add(trajectory)
+                # concatenate trajectories
+                for part in list(self.parts):
+                    traj, cnt_match = trajectory.match(part)
+                    logging.debug("number of matched points: {}\n".format(cnt_match))
+
+                    if traj is not None and ShapeUtil.is_convex(traj.points):
+                        if cnt_match == 1:
+                            self.parts.add(traj)
+                        elif cnt_match == 2:
+                            label = self.classifier.detect_shape(traj)
+                            descriptor = self.fitter.fit(label, traj)
+                            if self.reg_on:
+                                sub_label, descriptor = self.regularizer.regularize(label, descriptor)
+                if len(descriptor) == 0 and len(custom_descriptor) != 0:
+                    label = custom_label
+                    descriptor = custom_descriptor
 
         return {'label': label, 'sub_label': sub_label, 'descriptor': descriptor}
-
-

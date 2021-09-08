@@ -18,6 +18,7 @@ from core.classifier import Classifier
 import pygame
 import sys
 
+from core.wukong import Wukong
 from utils import FileUtil
 
 
@@ -29,6 +30,7 @@ class Gameboard:
         self.RED = (255, 0, 0)
 
         self.classifier = Classifier()
+        self.wukong = Wukong()
         self.res = {'label': 'unknown', 'descriptor': [], 'line': []}
         self.points = []
         self.auto_label = True
@@ -199,7 +201,10 @@ class Gameboard:
                         elif event.type == pygame.MOUSEBUTTONUP:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
-                                label, pts = self.classifier.detect(self.points)
+                                # label, pts = self.classifier.detect(self.points)
+                                res = self.wukong.detect(self.points)
+                                label = res['label']
+                                pts = res['descriptor']
                                 self.label_to_btn[label].set_state(True)
                                 logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                                 self.res['label'] = label

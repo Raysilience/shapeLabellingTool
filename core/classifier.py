@@ -31,7 +31,7 @@ class Classifier:
         self.peri = 0
         self.area = 0
 
-    def detect(self, points):
+    def detect_shape(self, points):
         """
         detect whether a sequence of points represents a geometric shape
         :param points: a sequence of points sampled in a specific sampling rate
@@ -62,7 +62,7 @@ class Classifier:
         # multi touches drawing
         else:
             if ShapeUtil.is_convex(_points):
-                custom_pts = self._approx_customized_shape(trajectory)
+                custom_pts = self.approx_customized_shape(trajectory)
                 logging.debug("customize pts: {}".format(custom_pts))
 
                 pts = self._match_trajectory(trajectory)
@@ -92,27 +92,7 @@ class Classifier:
     def detect_end2end(self, points):
         pass
 
-    # Todo: optimize matching process with bisection
-    def _match_trajectory(self, trajectory):
-        """
-        match two trajectory. if they can concatenate into a closed convex shape return it otherwise store it
-        in the parts
-        :param trajectory: current trajectory to be matched
-        :return: test of a new shape if it meets requirements otherwise None
-        """
-        pts = None
-        logging.debug("number of parts: {}\n".format(len(self.parts)))
-        for part in list(self.parts):
-            traj, cnt_match = trajectory.match(part)
-            logging.debug("number of matched points: {}\n".format(cnt_match))
 
-            if traj is not None and ShapeUtil.is_convex(traj.points):
-                if cnt_match == 1:
-                    self.parts.add(traj)
-                elif cnt_match == 2:
-                    pts = ShapeUtil.align_shape(traj.points, traj.MAX_ALIGN_RADIAN) if self.ALIGN_SHAPE else traj.points
-                    self.parts.remove(part)
-        return pts
 
     def find_turning_points(self, points):
         """
@@ -200,7 +180,7 @@ class Classifier:
             logging.info("reach the maximum of turning points, fail to detect")
         return None
 
-    def _approx_customized_shape(self, trajectory):
+    def detect_customized_shape(self, trajectory):
         logging.debug("into customize")
 
         if trajectory.get_length() == 2:
@@ -208,7 +188,7 @@ class Classifier:
                                         trajectory.MAX_PARALLEL_RADIAN) or \
                     ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                              np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
-                return trajectory.points
+                return 'line', trajectory.points
         elif trajectory.get_length() == 4:
             if trajectory.is_parallel():
                 if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
@@ -216,6 +196,6 @@ class Classifier:
                         ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                                  np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
                     if abs(trajectory.points[0][0] - trajectory.points[-1][0]) < 20 or abs(trajectory.points[0][1] - trajectory.points[-1][1]) < 20:
-                        return trajectory.points
+                        return 'form_extension', trajectory.points
         else:
-            return None
+            return '', []
