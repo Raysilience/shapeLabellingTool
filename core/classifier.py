@@ -24,8 +24,8 @@ class Classifier:
         self.NUM_OF_CONSECUTIVE_POINTS = config.getint('params', 'NUM_OF_CONSECUTIVE_POINTS')
         self.MODEL_PATH = config.get('model', 'MODEL_PATH')
 
-        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse']
-        self.SUB_LABELS = ['triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse', 'triangle', 'quadrangle', 'pentagon', 'hexagon']
+        self.SUB_LABELS = ['circle']
         self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
         self.peri = 0
         self.area = 0
