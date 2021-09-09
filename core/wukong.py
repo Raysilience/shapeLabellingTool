@@ -16,22 +16,18 @@ from core.fitter import Fitter
 from core.regularizer import Regularizer
 from core.trajectory import Trajectory
 from utils import ShapeUtil
-
+from configparser import ConfigParser
 
 class Wukong:
-    def __init__(self, reg_on=True):
-        self.reg_on = reg_on
-        self.MIN_BALL_RADIUS = 50
-        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
-        self.NUM_OF_CONSECUTIVE_POINTS = 15
-        self.MAX_CLOSED_FACTOR = 0.4
-        self.CONVEX_RELAXATION = math.pi/6
+    def __init__(self):
+        config = ConfigParser()
+        config.read("config.ini")
+        params = config['params']
+        self.reg_on = params.getboolean('REGULARIZER_ON')
+        self.MAX_CLOSED_FACTOR = params.getfloat('MAX_CLOSED_FACTOR')
+        self.CONVEX_RELAXATION = params.getint('CONVEX_RELAXATION') * math.pi / 180
 
-        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse']
-
-        self.SUB_LABELS = ['triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle']
-
-        self.classifier = Classifier()
+        self.classifier = Classifier(config)
         self.fitter = Fitter()
         self.regularizer = Regularizer()
 

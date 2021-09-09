@@ -29,7 +29,6 @@ class Gameboard:
         self.BLUE = (153, 153, 255)
         self.RED = (255, 0, 0)
 
-        self.classifier = Classifier()
         self.wukong = Wukong()
         self.res = {'label': 'unknown', 'descriptor': [], 'line': []}
         self.points = []

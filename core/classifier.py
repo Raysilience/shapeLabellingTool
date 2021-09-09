@@ -18,16 +18,13 @@ from core.trajectory import Trajectory
 
 
 class Classifier:
-    def __init__(self):
-        self.MIN_BALL_RADIUS = 50
-        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
-        self.NUM_OF_CONSECUTIVE_POINTS = 15
-        self.MAX_CLOSED_FACTOR = 0.4
-        self.ALIGN_SHAPE = False
+    def __init__(self, config):
+        self.MIN_BALL_RADIUS = config.getint('params', 'MIN_BALL_RADIUS')
+        self.MIN_DISTINGUISH_ANGLE = math.cos(config.getint('params', 'MIN_DISTINGUISH_ANGLE') * math.pi / 180)
+        self.NUM_OF_CONSECUTIVE_POINTS = config.getint('params', 'NUM_OF_CONSECUTIVE_POINTS')
+        self.MODEL_PATH = config.get('model', 'MODEL_PATH')
 
-        self.parts = set()
         self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse']
-
         self.SUB_LABELS = ['triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle']
         self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
         self.peri = 0
@@ -43,6 +40,7 @@ class Classifier:
 
 
     def detect_cnn(self, trajectory):
+
         pass
 
     def detect_tradition(self, trajectory):
