@@ -16,9 +16,8 @@ from utils import MathUtil, ShapeUtil
 
 
 class Trajectory:
-    def __init__(self, points, align_on=True):
+    def __init__(self, points):
         self.points = np.asarray(points)
-        self._is_align_on = align_on
         self.MAX_ALIGN_RADIAN = math.pi / 18
         self.MAX_PARALLEL_RADIAN = math.pi / 15
         self.MAX_PARALLEL_SIN = math.sin(self.MAX_PARALLEL_RADIAN)
@@ -119,10 +118,7 @@ class Trajectory:
         else:
             return None
 
-        if self._is_align_on:
-            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
-        else:
-            return vertices
+        return vertices
 
     def approx_rectangle(self):
         if self.get_length() == 5:
@@ -133,10 +129,7 @@ class Trajectory:
         else:
             return None
 
-        if self._is_align_on:
-            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
-        else:
-            return vertices
+        return vertices
 
     def approx_pentagon(self):
         if self.get_length() == 6:
@@ -148,11 +141,7 @@ class Trajectory:
         else:
             return None
 
-        # vertices = self._approx_regular_polygon(vertices, None)
-        if self._is_align_on:
-            return ShapeUtil.align_shape(vertices, self.MAX_ALIGN_RADIAN)
-        else:
-            return vertices
+        return vertices
 
     def approx_hexagon(self):
         if len(self.points) == 7:
@@ -164,7 +153,7 @@ class Trajectory:
             vertices = self.points
         else:
             return None
-        # return self._approx_regular_polygon(vertices, None)
+
         return vertices
 
 

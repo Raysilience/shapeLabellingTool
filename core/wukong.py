@@ -7,6 +7,7 @@
 @Author     :Rui
 @Desc       :
 '''
+import json
 import logging
 import math
 
@@ -26,8 +27,9 @@ class Wukong:
         self.MAX_CLOSED_FACTOR = 0.4
         self.CONVEX_RELAXATION = math.pi/6
 
-        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle',
-                       'ellipse']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse']
+
+        self.SUB_LABELS = ['triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle']
 
         self.classifier = Classifier()
         self.fitter = Fitter()
@@ -43,12 +45,7 @@ class Wukong:
 
         # one touch drawing
         if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
-            label = self.classifier.detect_shape(trajectory)
-            descriptor = self.fitter.fit(label, trajectory)
-            # end-to-end strategy
-            # label, descriptor = self.classifier.detect_end2end(trajectory)
-            if self.reg_on:
-                sub_label, descriptor = self.regularizer.regularize(label, descriptor)
+            label, sub_label, descriptor = self._detect_one_touch(trajectory)
 
         # multi touches drawing
         else:
@@ -66,12 +63,28 @@ class Wukong:
                         if cnt_match == 1:
                             self.parts.add(traj)
                         elif cnt_match == 2:
-                            label = self.classifier.detect_shape(traj)
-                            descriptor = self.fitter.fit(label, traj)
-                            if self.reg_on:
-                                sub_label, descriptor = self.regularizer.regularize(label, descriptor)
+                            label, sub_label, descriptor = self._detect_one_touch(trajectory)
+
                 if len(descriptor) == 0 and len(custom_descriptor) != 0:
                     label = custom_label
                     descriptor = custom_descriptor
 
-        return {'label': label, 'sub_label': sub_label, 'descriptor': descriptor}
+        res = {'label': label, 'sub_label': sub_label, 'descriptor': descriptor}
+        return json.dumps(res)
+
+    def _detect_one_touch(self, trajectory):
+        sub_label = ''
+        # strategy 0: use traditional algorithm as classifier and fitter
+        label, descriptor = self.classifier.detect_tradition(trajectory)
+
+        # strategy 1: use cnn as classifier
+        # label = self.classifier.detect_shape(trajectory)
+        # descriptor = self.fitter.fit(label, trajectory)
+
+        # strategy 2: use cnn as classifier and fitter
+        # label, descriptor = self.classifier.detect_end2end(trajectory)
+
+        if self.reg_on:
+            descriptor = self.regularizer.regularize(label, descriptor)
+
+        return label, sub_label, descriptor

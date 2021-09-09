@@ -26,8 +26,10 @@ class Classifier:
         self.ALIGN_SHAPE = False
 
         self.parts = set()
-        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle',
-                       'ellipse']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse']
+
+        self.SUB_LABELS = ['triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle']
+        self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
         self.peri = 0
         self.area = 0
 
@@ -37,61 +39,44 @@ class Classifier:
         :param points: a sequence of points sampled in a specific sampling rate
         :return: label and vector points if any; otherwise, None
         """
+
+
+
+    def detect_cnn(self, trajectory):
+        pass
+
+    def detect_tradition(self, trajectory):
+        label = "unknown"
+        descriptor = []
+
         pts = None
-        custom_pts = None
-        _points = self.find_turning_points(points)
+        _points = self.find_turning_points(trajectory.points)
         thinness = self.peri * self.peri / (self.area + 1e-9)
         logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area,
                                                                    self.peri * self.peri / (self.area + 1e-9)))
 
         # detect circle
         if 12.56 < thinness < 13.85:
-            trajectory = Trajectory(points)
             center, radius = trajectory.approx_circle()
-            label = self.LABELS[7]
-            return label, np.array([center[0], center[1], radius], dtype=np.int32)
+            return self.LABELS[3], [int(center[0]), int(center[1]), int(radius)]
 
-        else:
-            trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+        trajectory = Trajectory(_points)
 
         # one touch drawing
-        if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
-            if ShapeUtil.is_convex(_points[:-1]):
-                pts = self._approx_polygon(trajectory)
-
-        # multi touches drawing
-        else:
-            if ShapeUtil.is_convex(_points):
-                custom_pts = self.approx_customized_shape(trajectory)
-                logging.debug("customize pts: {}".format(custom_pts))
-
-                pts = self._match_trajectory(trajectory)
-                # pts could not form a polygon add it to part
-                if pts is None:
-                    self.parts.add(trajectory)
+        if ShapeUtil.is_convex(_points[:-1]):
+            pts = self._approx_polygon(trajectory)
 
         if pts is None:
-            if custom_pts is None:
-                label = self.LABELS[0]
-            else:
-                if len(custom_pts) == 2:
-                    label = self.LABELS[2]
-                else:
-                    label = self.LABELS[1]
-                pts = custom_pts
+            label = self.LABELS[0]
         else:
             refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
             area_diff_ratio = abs(refined_area - self.area) / self.area
             logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
             if area_diff_ratio > 0.3:
                 return self.LABELS[0], None
-            label = self.LABELS[len(pts)]
-        return label, pts
-
-
-    def detect_end2end(self, points):
-        pass
-
+            label = self.NUM_TO_SUB_LABEL[len(pts)]
+            descriptor = pts.tolist()
+        return label, descriptor
 
 
     def find_turning_points(self, points):

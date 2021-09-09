@@ -202,9 +202,10 @@ class Gameboard:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
                                 # label, pts = self.classifier.detect(self.points)
-                                res = self.wukong.detect(self.points)
-                                label = res['label']
-                                pts = res['descriptor']
+                                response = self.wukong.detect(self.points)
+                                data = json.loads(response)
+                                label = data['label']
+                                pts = data['descriptor']
                                 self.label_to_btn[label].set_state(True)
                                 logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
                                 self.res['label'] = label
@@ -222,7 +223,7 @@ class Gameboard:
         self.board.blit(label_img, (10, 100))
         if label == 'unknown':
             return
-        elif label == 'circle':
+        elif label == 'ellipse':
             x, y, r = pts
             pygame.draw.circle(self.board, self.GREEN, (x, y), r, 3)
             pygame.draw.circle(self.board, self.RED, (x, y), 3)
