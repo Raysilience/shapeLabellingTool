@@ -14,7 +14,6 @@ import numpy as np
 import logging
 
 from board.button import Button
-from core.classifier import Classifier
 import pygame
 import sys
 
@@ -25,6 +24,7 @@ from utils import FileUtil
 class Gameboard:
     def __init__(self, width=1920, height=1080, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
         self.GREEN = (0, 255, 0)
         self.BLUE = (153, 153, 255)
         self.RED = (255, 0, 0)
@@ -200,7 +200,6 @@ class Gameboard:
                         elif event.type == pygame.MOUSEBUTTONUP:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
-                                # label, pts = self.classifier.detect(self.points)
                                 response = self.wukong.detect(self.points)
                                 data = json.loads(response)
                                 label = data['label']

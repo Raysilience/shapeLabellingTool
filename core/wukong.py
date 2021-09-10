@@ -80,7 +80,8 @@ class Wukong:
         # strategy 2: use cnn as classifier and fitter
         # label, descriptor = self.classifier.detect_end2end(trajectory)
 
+
         if self.reg_on:
-            descriptor = self.regularizer.regularize(label, descriptor)
+            sub_label, descriptor = self.regularizer.regularize(label, descriptor)
 
         return label, sub_label, descriptor

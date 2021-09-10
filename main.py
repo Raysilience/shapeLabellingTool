@@ -1,8 +1,7 @@
 import logging
-import math
 
 from board.gameboard import Gameboard
-
+from board.whiteboard import Whiteboard
 
 if __name__ == '__main__':
 
@@ -10,5 +9,7 @@ if __name__ == '__main__':
     LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     whiteboard = Gameboard()
+    # whiteboard = Whiteboard()
+
     # # whiteboard.set_points(pts)
     whiteboard.draw()

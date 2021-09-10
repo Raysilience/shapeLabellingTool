@@ -15,8 +15,4 @@ class Fitter:
         pass
 
     def fit(self, label, trajectory):
-        if label == 'ellipse':
-            res = cv2.fitEllipse(trajectory.points)
-            return [int(x) for x in [res[0][0], res[0][1], res[1][0], res[1][1], res[2]]]
-
-        # elif label == 'triangle':
+        pass
