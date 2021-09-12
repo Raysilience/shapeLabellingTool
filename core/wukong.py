@@ -41,6 +41,7 @@ class Wukong:
 
         # one touch drawing
         if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
+            logging.debug("close criterion: sketch is closed")
             label, sub_label, descriptor = self._detect_one_touch(trajectory)
 
         # multi touches drawing
@@ -48,6 +49,8 @@ class Wukong:
             _points = self.classifier.find_turning_points(points)
             trajectory = Trajectory(_points)
             if ShapeUtil.is_convex(_points, self.CONVEX_RELAXATION):
+                logging.debug("convex criterion: sketch is closed")
+
                 custom_label, custom_descriptor = self.classifier.detect_customized_shape(trajectory)
 
                 # concatenate trajectories

@@ -22,7 +22,7 @@ from utils import FileUtil
 
 
 class Gameboard:
-    def __init__(self, width=1920, height=1080, mode='interactive') -> None:
+    def __init__(self, width=1280, height=720, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
         self.BLACK = (0, 0, 0)
         self.GREEN = (0, 255, 0)
@@ -203,9 +203,10 @@ class Gameboard:
                                 response = self.wukong.detect(self.points)
                                 data = json.loads(response)
                                 label = data['label']
+                                sub_label = data['sub_label']
                                 pts = data['descriptor']
                                 self.label_to_btn[label].set_state(True)
-                                logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
+                                logging.info("\nlabel: {}\nsub_label: {}\ndescriptor: \n{}".format(label, sub_label, pts))
                                 self.res['label'] = label
                                 self.res['descriptor'] = pts
                                 self._draw_result(label, pts)

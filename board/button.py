@@ -35,13 +35,11 @@ class Button(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        logging.debug("rect{}".format(self.rect))
         self.xmin = self.rect.x
         self.xmax = self.rect.x + self.rect.w
         self.ymin = self.rect.y
         self.ymax = self.rect.y + self.rect.h
         self.name = name
-        logging.debug("name{}".format(self.name))
 
 
     def update(self, *args, **kwargs) -> None:
