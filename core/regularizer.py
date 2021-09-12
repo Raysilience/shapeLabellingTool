@@ -47,6 +47,16 @@ class Regularizer:
                     equilateral = False
             if equilateral:
                 sub_label = 'equilateral triangle'
+                center, radius = cv2.minEnclosingCircle(vertices)
+                direct0 = MathUtil.calc_uniform_vec(center - vertices[0])
+                length = MathUtil.calc_eucleadian_dist(center, vertices[0])
+                aff_max = MathUtil.get_affine_matrix(math.pi * 2 / 3)
+                direct1 = np.dot(aff_max, direct0)
+                direct2 = np.dot(aff_max, direct1)
+                vertices[1] = ShapeUtil.translate(center, direct1, length)
+                vertices[2] = ShapeUtil.translate(center, direct2, length)
+                vertices[2] = center
+
             else:
                 pass
         elif label == 'quadrangle':
@@ -86,6 +96,7 @@ class Regularizer:
 
                 vertices[1] = ShapeUtil.translate(mid_point, direct1, length)
                 vertices[3] = ShapeUtil.translate(mid_point, direct3, length)
+                vertices = ShapeUtil.align_shape(vertices, self.MAX_PARALLEL_RAD_RELAXATION)
 
         return sub_label, vertices.tolist()
 
