@@ -24,9 +24,11 @@ class Regularizer:
         self.MAX_PARALLEL_RAD_RELAXATION = config.getint('params', 'MAX_PARALLEL_RAD_RELAXATION') * math.pi / 180
         self.MAX_VERTICAL_RAD_RELAXATION = config.getint('params', 'MAX_VERTICAL_RAD_RELAXATION') * math.pi / 180
         self.MAX_DIAG_DIFF_FACTOR = config.getfloat('params', 'MAX_DIAG_DIFF_FACTOR')
+        self.MAX_AXIS_DIFF_FACTOR = config.getfloat('params', 'MAX_AXIS_DIFF_FACTOR')
         self.align_on = config.getboolean('params', 'ALIGN_ON')
 
     def regularize(self, label, vertices):
+        logging.debug("entering regularizer")
         sub_label = ''
         vertices = np.asarray(vertices)
         if label == 'ellipse':
@@ -34,7 +36,7 @@ class Regularizer:
             x, y = res[0]
             axis_w, axis_h = res[1]
             angle = res[2]
-            if abs(axis_h - axis_w) < 15:
+            if abs(axis_h - axis_w) < self.MAX_AXIS_DIFF_FACTOR * max(axis_h, axis_w):
                 avg = (axis_h + axis_w) / 2
                 axis_w, axis_h = avg, avg
                 sub_label = 'circle'

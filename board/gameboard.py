@@ -218,6 +218,7 @@ class Gameboard:
 
     def _draw_result(self, label, sub_label, pts):
         pygame.draw.rect(self.board, self.WHITE, (10, 50, 500, 80), width=0)
+        print(sub_label)
         if sub_label:
             label_img = self.font.render(sub_label, True, self.RED, self.WHITE)
         else:
