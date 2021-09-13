@@ -29,7 +29,7 @@ class Wukong:
 
         self.classifier = Classifier(config)
         self.fitter = Fitter()
-        self.regularizer = Regularizer()
+        self.regularizer = Regularizer(config)
 
         self.parts = set()
 

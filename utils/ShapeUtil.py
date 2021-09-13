@@ -60,7 +60,6 @@ def align_shape(vertices, epsilon):
     :param epsilon: maximum radian determining align or not
     :return: aligned vertices in the form of numpy array
     """
-    print(vertices)
     center, radius = cv2.minEnclosingCircle(vertices)
     abs_rad = 2 * math.pi
     rad = abs_rad

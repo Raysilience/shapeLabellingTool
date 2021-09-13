@@ -18,17 +18,17 @@ from utils import MathUtil, ShapeUtil
 
 class Regularizer:
 
-    def __init__(self):
-        self.MAX_EQUILATERAL_RAD_RELAXATION = math.pi / 12
-        self.MAX_ISOSCELES_RAD_RELAXATION = math.pi / 12
-        self.MAX_PARALLEL_RAD_RELAXATION = math.pi / 8
-        self.MAX_VERTICAL_RAD_RELAXATION = math.pi / 12
-        self.MAX_DIAG_DIFF_FACTOR = 0.2
+    def __init__(self, config):
+        self.MAX_EQUILATERAL_RAD_RELAXATION = config.getint('params', 'MAX_EQUILATERAL_RAD_RELAXATION') * math.pi / 180
+        self.MAX_ISOSCELES_RAD_RELAXATION = config.getint('params', 'MAX_ISOSCELES_RAD_RELAXATION') * math.pi / 180
+        self.MAX_PARALLEL_RAD_RELAXATION = config.getint('params', 'MAX_PARALLEL_RAD_RELAXATION') * math.pi / 180
+        self.MAX_VERTICAL_RAD_RELAXATION = config.getint('params', 'MAX_VERTICAL_RAD_RELAXATION') * math.pi / 180
+        self.MAX_DIAG_DIFF_FACTOR = config.getfloat('params', 'MAX_DIAG_DIFF_FACTOR')
+        self.align_on = config.getboolean('params', 'ALIGN_ON')
 
     def regularize(self, label, vertices):
         sub_label = ''
         vertices = np.asarray(vertices)
-        print(vertices)
         if label == 'ellipse':
             res = cv2.fitEllipse(vertices)
             x, y = res[0]
@@ -112,8 +112,8 @@ class Regularizer:
                 vertices[1] = ShapeUtil.translate(mid_point, direct1, length)
                 vertices[3] = ShapeUtil.translate(mid_point, direct3, length)
 
-
-        vertices = ShapeUtil.align_shape(vertices, self.MAX_PARALLEL_RAD_RELAXATION)
+        if self.align_on:
+            vertices = ShapeUtil.align_shape(vertices, self.MAX_PARALLEL_RAD_RELAXATION)
 
         return sub_label, vertices.tolist()
 

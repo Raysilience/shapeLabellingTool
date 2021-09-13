@@ -125,7 +125,7 @@ class Gameboard:
 
                     # s: save
                     elif event.key == 115:
-                        print(self.res)
+                        logging.info("save file: {}".format(self.res))
                         self.btn_save.set_state(True)
                         self._save_result()
                         self._reset_board()
@@ -151,7 +151,7 @@ class Gameboard:
                                     btn.set_state(True)
                                     self._reset_board()
                                 elif name == 'save':
-                                    print(self.res)
+                                    logging.info("save file: {}".format(self.res))
                                     btn.set_state(True)
                                     self._save_result()
                                     self._reset_board()
