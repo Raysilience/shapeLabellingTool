@@ -11,6 +11,7 @@
 import logging
 import math
 
+import cv2
 import numpy as np
 
 from utils import MathUtil, ShapeUtil
@@ -23,27 +24,34 @@ class Classifier:
         self.MIN_DISTINGUISH_ANGLE = math.cos(config.getint('params', 'MIN_DISTINGUISH_ANGLE') * math.pi / 180)
         self.NUM_OF_CONSECUTIVE_POINTS = config.getint('params', 'NUM_OF_CONSECUTIVE_POINTS')
         self.MODEL_PATH = config.get('model', 'MODEL_PATH')
+        self.CNN_ON = config.getboolean('model', 'CNN_ON')
+        self.reg_on = config.getboolean('params', 'REGULARIZER_ON')
 
         self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse', 'triangle', 'quadrangle', 'pentagon', 'hexagon']
         self.SUB_LABELS = ['circle']
         self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
+
         self.peri = 0
         self.area = 0
 
-    def detect_shape(self, points):
+
+    def detect_shape(self, trajectory):
         """
         detect whether a sequence of points represents a geometric shape
-        :param points: a sequence of points sampled in a specific sampling rate
-        :return: label and vector points if any; otherwise, None
+        :param trajectory: a group of sampling points in the form of Trajectory object
+        :return: a tuple of label in str, sub_label in str, and descriptor in list
         """
+        if not self.CNN_ON:
+            return self._detect_tradition(trajectory)
+        else:
+            return self._detect_cnn(trajectory)
 
 
-
-    def detect_cnn(self, trajectory):
+    def _detect_cnn(self, trajectory):
 
         pass
 
-    def detect_tradition(self, trajectory):
+    def _detect_tradition(self, trajectory):
         """
         use tradition feature engineering method to detect shape
         :param trajectory: a group of sampling points in the form of Trajectory object
@@ -60,7 +68,19 @@ class Classifier:
 
         # detect circle
         if 12.56 < thinness < 13.85:
-            return self.LABELS[3], trajectory.points
+            label = self.LABELS[3]
+
+            if self.reg_on:
+                return label, trajectory.points
+            else:
+                res = cv2.fitEllipse(trajectory.points)
+                x, y = res[0]
+                axis_w, axis_h = res[1]
+                angle = res[2]
+                if abs(axis_h - axis_w) < 15:
+                    avg = (axis_h + axis_w) / 2
+                    axis_w, axis_h = avg, avg
+                return label, [int(x) for x in [x, y, axis_w, axis_h, angle]]
 
         trajectory = Trajectory(_points)
 
@@ -78,7 +98,6 @@ class Classifier:
                 label = self.NUM_TO_SUB_LABEL[len(pts)]
                 descriptor = pts.tolist()
         return label, descriptor
-
 
     def find_turning_points(self, points):
         """

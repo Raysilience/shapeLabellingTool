@@ -76,16 +76,12 @@ class RISC:
 
     def _detect_one_touch(self, trajectory):
         sub_label = ''
-        # strategy 0: use traditional algorithm as classifier and fitter
-        label, descriptor = self.classifier.detect_tradition(trajectory)
+        # strategy 0: use traditional algorithm or cnn as both classifier and fitter
+        label, descriptor = self.classifier.detect_shape(trajectory)
 
         # strategy 1: use cnn as classifier
         # label = self.classifier.detect_shape(trajectory)
         # descriptor = self.fitter.fit(label, trajectory)
-
-        # strategy 2: use cnn as classifier and fitter
-        # label, descriptor = self.classifier.detect_end2end(trajectory)
-
 
         if self.reg_on and len(descriptor) > 0 :
             sub_label, descriptor = self.regularizer.regularize(label, descriptor)
