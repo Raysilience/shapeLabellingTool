@@ -84,7 +84,7 @@ class Wukong:
         # label, descriptor = self.classifier.detect_end2end(trajectory)
 
 
-        if self.reg_on:
+        if self.reg_on and len(descriptor) > 0 :
             sub_label, descriptor = self.regularizer.regularize(label, descriptor)
 
         return label, sub_label, descriptor

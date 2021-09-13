@@ -223,7 +223,8 @@ class Gameboard:
         if label == 'unknown':
             return
         elif label == 'ellipse':
-            x, y, r = pts
+            x, y, axis_w, axis_h, angle = pts
+            r = axis_w / 2
             pygame.draw.circle(self.board, self.GREEN, (x, y), r, 3)
             pygame.draw.circle(self.board, self.RED, (x, y), 3)
         else:

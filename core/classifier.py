@@ -44,6 +44,11 @@ class Classifier:
         pass
 
     def detect_tradition(self, trajectory):
+        """
+        use tradition feature engineering method to detect shape
+        :param trajectory: a group of sampling points in the form of Trajectory object
+        :return: a tuple of label in str, descriptor in list
+        """
         label = "unknown"
         descriptor = []
 
@@ -55,8 +60,7 @@ class Classifier:
 
         # detect circle
         if 12.56 < thinness < 13.85:
-            center, radius = trajectory.approx_circle()
-            return self.LABELS[3], [int(center[0]), int(center[1]), int(radius)]
+            return self.LABELS[3], trajectory.points
 
         trajectory = Trajectory(_points)
 
@@ -70,10 +74,9 @@ class Classifier:
             refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
             area_diff_ratio = abs(refined_area - self.area) / self.area
             logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
-            if area_diff_ratio > 0.3:
-                return self.LABELS[0], None
-            label = self.NUM_TO_SUB_LABEL[len(pts)]
-            descriptor = pts.tolist()
+            if area_diff_ratio < 0.3:
+                label = self.NUM_TO_SUB_LABEL[len(pts)]
+                descriptor = pts.tolist()
         return label, descriptor
 
 

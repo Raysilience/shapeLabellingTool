@@ -20,6 +20,7 @@ class Regularizer:
 
     def __init__(self):
         self.MAX_EQUILATERAL_RAD_RELAXATION = math.pi / 12
+        self.MAX_ISOSCELES_RAD_RELAXATION = math.pi / 12
         self.MAX_PARALLEL_RAD_RELAXATION = math.pi / 8
         self.MAX_VERTICAL_RAD_RELAXATION = math.pi / 12
         self.MAX_DIAG_DIFF_FACTOR = 0.2
@@ -27,7 +28,7 @@ class Regularizer:
     def regularize(self, label, vertices):
         sub_label = ''
         vertices = np.asarray(vertices)
-        descriptor = []
+        print(vertices)
         if label == 'ellipse':
             res = cv2.fitEllipse(vertices)
             x, y = res[0]
@@ -38,27 +39,41 @@ class Regularizer:
                 axis_w, axis_h = avg, avg
                 sub_label = 'circle'
             return sub_label, [int(x) for x in [x, y, axis_w, axis_h, angle]]
+
         elif label == 'triangle':
             radians = []
             equilateral = True
             for i in range(len(vertices)):
                 rad = MathUtil.calc_radian(vertices[i] - vertices[i - 1], vertices[i] - vertices[i - 2])
+                radians.append(rad)
                 if abs(rad - math.pi/3) > self.MAX_EQUILATERAL_RAD_RELAXATION:
                     equilateral = False
             if equilateral:
                 sub_label = 'equilateral triangle'
                 center, radius = cv2.minEnclosingCircle(vertices)
-                direct0 = MathUtil.calc_uniform_vec(center - vertices[0])
+                direct0 = MathUtil.calc_uniform_vec(vertices[0] - center)
                 length = MathUtil.calc_eucleadian_dist(center, vertices[0])
                 aff_max = MathUtil.get_affine_matrix(math.pi * 2 / 3)
                 direct1 = np.dot(aff_max, direct0)
                 direct2 = np.dot(aff_max, direct1)
                 vertices[1] = ShapeUtil.translate(center, direct1, length)
                 vertices[2] = ShapeUtil.translate(center, direct2, length)
-                vertices[2] = center
-
             else:
-                pass
+                if abs(radians[0] - radians[1]) < self.MAX_ISOSCELES_RAD_RELAXATION:
+                    sub_label = 'isosceles triangle'
+                    vertices = vertices[[2, 1, 0]]
+                elif abs(radians[0] - radians[2]) < self.MAX_ISOSCELES_RAD_RELAXATION:
+                    sub_label = 'isosceles triangle'
+                    vertices = vertices[[1, 0, 2]]
+                elif abs(radians[1] - radians[2]) < self.MAX_ISOSCELES_RAD_RELAXATION:
+                    sub_label = 'isosceles triangle'
+
+                if sub_label == 'isosceles triangle':
+                    length = MathUtil.calc_eucleadian_dist(vertices[0], vertices[1])
+                    direct2 = MathUtil.calc_uniform_vec(vertices[2] - vertices[0])
+                    vertices[2] = ShapeUtil.translate(vertices[0], direct2, length)
+
+
         elif label == 'quadrangle':
             if ShapeUtil.check_parallel(vertices[0], vertices[1], vertices[2], vertices[3], self.MAX_PARALLEL_RAD_RELAXATION) and \
                     ShapeUtil.check_parallel(vertices[0], vertices[3], vertices[1], vertices[2], self.MAX_PARALLEL_RAD_RELAXATION):
@@ -96,7 +111,9 @@ class Regularizer:
 
                 vertices[1] = ShapeUtil.translate(mid_point, direct1, length)
                 vertices[3] = ShapeUtil.translate(mid_point, direct3, length)
-                vertices = ShapeUtil.align_shape(vertices, self.MAX_PARALLEL_RAD_RELAXATION)
+
+
+        vertices = ShapeUtil.align_shape(vertices, self.MAX_PARALLEL_RAD_RELAXATION)
 
         return sub_label, vertices.tolist()
 
