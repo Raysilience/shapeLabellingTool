@@ -15,10 +15,11 @@ import numpy as np
 from utils import MathUtil
 
 
-def is_convex(vertices):
+def is_convex(vertices, eps=math.pi/6):
     """
     check whether all points of a closed graph could form a convex shape
     :param: vertices in the form of numpy array
+    :param: eps of relaxation radian
     :return: boolean
     """
     if len(vertices) < 2:
@@ -29,7 +30,7 @@ def is_convex(vertices):
     for i in range(len(vertices)):
         sum_radian += MathUtil.calc_radian(vertices[i - 2] - vertices[i - 1], vertices[i - 1] - vertices[i])
 
-    return abs(sum_radian - 2 * math.pi) < math.pi / 6
+    return abs(sum_radian - 2 * math.pi) < eps
 
 def get_rotation_rad(p0, p1):
     """
@@ -81,6 +82,16 @@ def align_shape(vertices, epsilon):
     return tmp_mat
 
 def check_parallel(p0, p1, p2, p3, epsilon_rad):
-    rad = MathUtil.calc_sin_angle(p0 - p1, p2 - p3)
-    return abs(rad) < math.sin(epsilon_rad)
+    sin_rad = MathUtil.calc_sin_angle(p0 - p1, p2 - p3)
+    return abs(sin_rad) < math.sin(epsilon_rad)
 
+def check_diag_vertical(p0, p1, p2, p3, epsilon_rad):
+    rad = MathUtil.calc_radian(p0-p2, p1-p3)
+    return abs(rad - math.pi / 2) < epsilon_rad
+
+
+def translate(point, direction, length):
+    return point + direction * length
+
+def gen_image_from_sketch(point):
+    pass

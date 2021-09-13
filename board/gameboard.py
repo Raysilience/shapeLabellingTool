@@ -14,21 +14,22 @@ import numpy as np
 import logging
 
 from board.button import Button
-from core.classifier import Classifier
 import pygame
 import sys
 
+from core.risc import RISC
 from utils import FileUtil
 
 
 class Gameboard:
     def __init__(self, width=1920, height=1080, mode='interactive') -> None:
         self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
         self.GREEN = (0, 255, 0)
         self.BLUE = (153, 153, 255)
         self.RED = (255, 0, 0)
 
-        self.classifier = Classifier()
+        self.risc = RISC()
         self.res = {'label': 'unknown', 'descriptor': [], 'line': []}
         self.points = []
         self.auto_label = True
@@ -124,7 +125,7 @@ class Gameboard:
 
                     # s: save
                     elif event.key == 115:
-                        print(self.res)
+                        logging.info("save file: {}".format(self.res))
                         self.btn_save.set_state(True)
                         self._save_result()
                         self._reset_board()
@@ -150,7 +151,7 @@ class Gameboard:
                                     btn.set_state(True)
                                     self._reset_board()
                                 elif name == 'save':
-                                    print(self.res)
+                                    logging.info("save file: {}".format(self.res))
                                     btn.set_state(True)
                                     self._save_result()
                                     self._reset_board()
@@ -199,26 +200,36 @@ class Gameboard:
                         elif event.type == pygame.MOUSEBUTTONUP:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
-                                label, pts = self.classifier.detect(self.points)
+                                response = self.risc.detect(self.points)
+                                data = json.loads(response)
+                                label = data['label']
+                                sub_label = data['sub_label']
+                                pts = data['descriptor']
                                 self.label_to_btn[label].set_state(True)
-                                logging.info("\nlabel: {}\ndescriptor: \n{}".format(label, pts))
+                                logging.info("\nlabel: {}\nsub_label: {}\ndescriptor: \n{}".format(label, sub_label, pts))
                                 self.res['label'] = label
-                                self.res['descriptor'] = pts.tolist() if pts is not None else []
-                                self._draw_result(label, pts)
+                                self.res['descriptor'] = pts
+                                self._draw_result(label, sub_label, pts)
                             self.points.clear()
 
             self.all_sprites.draw(self.board)
             pygame.display.flip()
 
 
-    def _draw_result(self, label, pts):
-        pygame.draw.rect(self.board, self.WHITE, (10, 90, 350, 60), width=0)
-        label_img = self.font.render(label, True, self.RED, self.WHITE)
-        self.board.blit(label_img, (10, 100))
+    def _draw_result(self, label, sub_label, pts):
+        pygame.draw.rect(self.board, self.WHITE, (10, 50, 500, 80), width=0)
+        print(sub_label)
+        if sub_label:
+            label_img = self.font.render(sub_label, True, self.RED, self.WHITE)
+        else:
+            label_img = self.font.render(label, True, self.RED, self.WHITE)
+
+        self.board.blit(label_img, (10, 50))
         if label == 'unknown':
             return
-        elif label == 'circle':
-            x, y, r = pts
+        elif label == 'ellipse':
+            x, y, axis_w, axis_h, angle = pts
+            r = axis_w / 2
             pygame.draw.circle(self.board, self.GREEN, (x, y), r, 3)
             pygame.draw.circle(self.board, self.RED, (x, y), 3)
         else:

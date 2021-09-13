@@ -11,106 +11,109 @@
 import logging
 import math
 
+import cv2
 import numpy as np
+import torch
 
 from utils import MathUtil, ShapeUtil
 from core.trajectory import Trajectory
+from model.Resnet import VGGRegNet
+from torchvision import datasets, models, transforms
 
 
 class Classifier:
-    def __init__(self):
-        self.MIN_BALL_RADIUS = 50
-        self.MIN_DISTINGUISH_ANGLE = math.cos(math.pi / 6)
-        self.NUM_OF_CONSECUTIVE_POINTS = 15
-        self.MAX_CLOSED_FACTOR = 0.4
-        self.ALIGN_SHAPE = False
+    def __init__(self, config):
+        self.MIN_BALL_RADIUS = config.getint('params', 'MIN_BALL_RADIUS')
+        self.MIN_DISTINGUISH_ANGLE = math.cos(config.getint('params', 'MIN_DISTINGUISH_ANGLE') * math.pi / 180)
+        self.NUM_OF_CONSECUTIVE_POINTS = config.getint('params', 'NUM_OF_CONSECUTIVE_POINTS')
+        self.MODEL_PATH = config.get('model', 'MODEL_PATH')
+        self.CNN_ON = config.getboolean('model', 'CNN_ON')
+        self.reg_on = config.getboolean('params', 'REGULARIZER_ON')
 
-        self.parts = set()
-        self.LABELS = ['unknown', 'form_extension', 'line', 'triangle', 'quadrangle', 'pentagon', 'hexagon', 'circle',
-                       'ellipse']
+        self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse', 'triangle', 'quadrangle', 'pentagon', 'hexagon']
+        self.SUB_LABELS = ['circle']
+        self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
         self.peri = 0
         self.area = 0
 
-    def detect(self, points):
+        if self.CNN_ON:
+            self._load_model()
+
+    def _load_model(self):
+        self.data_transforms = transforms.Compose([
+            transforms.Resize((128, 128)),
+            transforms.ToTensor()])
+
+        self.model = VGGRegNet()
+        self.model.eval()
+        self.model.load_state_dict({k.replace('module.', ''): v for k, v in
+                         torch.load(self.MODEL_PATH, map_location=lambda storage, loc: storage).items()})
+
+    def detect_shape(self, trajectory):
         """
         detect whether a sequence of points represents a geometric shape
-        :param points: a sequence of points sampled in a specific sampling rate
-        :return: label and vector points if any; otherwise, None
+        :param trajectory: a group of sampling points in the form of Trajectory object
+        :return: a tuple of label in str, sub_label in str, and descriptor in list
         """
+        if not self.CNN_ON:
+            return self._detect_tradition(trajectory)
+        else:
+            return self._detect_cnn(trajectory)
+
+
+    def _detect_cnn(self, trajectory):
+
+        pass
+
+    def _detect_tradition(self, trajectory):
+        """
+        use tradition feature engineering method to detect shape
+        :param trajectory: a group of sampling points in the form of Trajectory object
+        :return: a tuple of label in str, descriptor in list
+        """
+        label = "unknown"
+        descriptor = []
+
         pts = None
-        custom_pts = None
-        _points = self._find_turning_points(points)
+        _points = self.find_turning_points(trajectory.points)
         thinness = self.peri * self.peri / (self.area + 1e-9)
         logging.debug("\nperi: {}\narea: {}:\nthinness: {}".format(self.peri, self.area,
                                                                    self.peri * self.peri / (self.area + 1e-9)))
 
         # detect circle
         if 12.56 < thinness < 13.85:
-            trajectory = Trajectory(points)
-            center, radius = trajectory.approx_circle()
-            label = self.LABELS[7]
-            return label, np.array([center[0], center[1], radius], dtype=np.int32)
+            label = self.LABELS[3]
 
-        else:
-            trajectory = Trajectory(_points, self.ALIGN_SHAPE)
+            if self.reg_on:
+                return label, trajectory.points
+            else:
+                res = cv2.fitEllipse(trajectory.points)
+                x, y = res[0]
+                axis_w, axis_h = res[1]
+                angle = res[2]
+                if abs(axis_h - axis_w) < 15:
+                    avg = (axis_h + axis_w) / 2
+                    axis_w, axis_h = avg, avg
+                return label, [int(x) for x in [x, y, axis_w, axis_h, angle]]
+
+        trajectory = Trajectory(_points)
 
         # one touch drawing
-        if trajectory.is_closed(self.MAX_CLOSED_FACTOR):
-            if ShapeUtil.is_convex(_points[:-1]):
-                pts = self._approx_polygon(trajectory)
-
-        # multi touches drawing
-        else:
-            if ShapeUtil.is_convex(_points):
-                custom_pts = self._approx_customized_shape(trajectory)
-                logging.debug("customize pts: {}".format(custom_pts))
-
-                pts = self._match_trajectory(trajectory)
-                # pts could not form a polygon add it to part
-                if pts is None:
-                    self.parts.add(trajectory)
+        if ShapeUtil.is_convex(_points[:-1]):
+            pts = self._approx_polygon(trajectory)
 
         if pts is None:
-            if custom_pts is None:
-                label = self.LABELS[0]
-            else:
-                if len(custom_pts) == 2:
-                    label = self.LABELS[2]
-                else:
-                    label = self.LABELS[1]
-                pts = custom_pts
+            label = self.LABELS[0]
         else:
             refined_area, _ = MathUtil.calc_polygon_area_perimeter(pts)
             area_diff_ratio = abs(refined_area - self.area) / self.area
             logging.debug("\narea diff ratio: {}".format(area_diff_ratio))
-            if area_diff_ratio > 0.3:
-                return self.LABELS[0], None
-            label = self.LABELS[len(pts)]
-        return label, pts
+            if area_diff_ratio < 0.3:
+                label = self.NUM_TO_SUB_LABEL[len(pts)]
+                descriptor = pts.tolist()
+        return label, descriptor
 
-    # Todo: optimize matching process with bisection
-    def _match_trajectory(self, trajectory):
-        """
-        match two trajectory. if they can concatenate into a closed convex shape return it otherwise store it
-        in the parts
-        :param trajectory: current trajectory to be matched
-        :return: test of a new shape if it meets requirements otherwise None
-        """
-        pts = None
-        logging.debug("number of parts: {}\n".format(len(self.parts)))
-        for part in list(self.parts):
-            traj, cnt_match = trajectory.match(part)
-            logging.debug("number of matched points: {}\n".format(cnt_match))
-
-            if traj is not None and ShapeUtil.is_convex(traj.points):
-                if cnt_match == 1:
-                    self.parts.add(traj)
-                elif cnt_match == 2:
-                    pts = ShapeUtil.align_shape(traj.points, traj.MAX_ALIGN_RADIAN) if self.ALIGN_SHAPE else traj.points
-                    self.parts.remove(part)
-        return pts
-
-    def _find_turning_points(self, points):
+    def find_turning_points(self, points):
         """
         check graph convexity and find robust turning points in the graph
         :param points: sampling points
@@ -196,15 +199,17 @@ class Classifier:
             logging.info("reach the maximum of turning points, fail to detect")
         return None
 
-    def _approx_customized_shape(self, trajectory):
+    def detect_customized_shape(self, trajectory):
         logging.debug("into customize")
-
+        label = ''
+        descriptor = []
         if trajectory.get_length() == 2:
             if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]), np.array([0, 1]),
                                         trajectory.MAX_PARALLEL_RADIAN) or \
                     ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                              np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
-                return trajectory.points
+                label = 'line'
+                descriptor = trajectory.points.tolist()
         elif trajectory.get_length() == 4:
             if trajectory.is_parallel():
                 if ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
@@ -212,6 +217,7 @@ class Classifier:
                         ShapeUtil.check_parallel(trajectory.points[0], trajectory.points[1], np.array([0, 0]),
                                                  np.array([1, 0]), trajectory.MAX_PARALLEL_RADIAN):
                     if abs(trajectory.points[0][0] - trajectory.points[-1][0]) < 20 or abs(trajectory.points[0][1] - trajectory.points[-1][1]) < 20:
-                        return trajectory.points
-        else:
-            return None
+                        label =  'form_extension'
+                        descriptor = trajectory.points.tolist()
+
+        return label, descriptor

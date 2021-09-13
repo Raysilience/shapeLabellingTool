@@ -35,6 +35,14 @@ def calc_radian(vec1, vec2):
     return math.acos(cos_theta)
 
 
+def calc_uniform_vec(vec):
+    return vec/(np.linalg.norm(vec) + 1e-9)
+
+
+def calc_eucleadian_dist(vec1, vec2):
+    return np.linalg.norm(vec1-vec2)
+
+
 def calc_cos_against_x_pos_axis(vec):
     unit_x = np.array([1, 0])
     return calc_cos_angle(vec, unit_x)
