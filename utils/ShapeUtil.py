@@ -93,19 +93,5 @@ def check_diag_vertical(p0, p1, p2, p3, epsilon_rad):
 def translate(point, direction, length):
     return point + direction * length
 
-def approx_circle(points):
-    """
-    approximate circle from a bunch of points
-    :param points: sampling points in the form of numpy array
-    :return: center_x, center_y, radius
-    """
-    center, radius = cv2.minEnclosingCircle(points)
-    return [int(x) for x in center], int(radius)
-
-def approx_ellipse(points):
-    """
-    approximate ellipse from a bunch of points
-    :param points: sampling points in the form of numpy array
-    :return: center_x, center_y, axis_width, axis_height, angle
-    """
-    return cv2.fitEllipse(points)
+def gen_image_from_sketch(point):
+    pass

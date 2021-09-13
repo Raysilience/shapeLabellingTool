@@ -13,9 +13,12 @@ import math
 
 import cv2
 import numpy as np
+import torch
 
 from utils import MathUtil, ShapeUtil
 from core.trajectory import Trajectory
+from model.Resnet import VGGRegNet
+from torchvision import datasets, models, transforms
 
 
 class Classifier:
@@ -30,10 +33,21 @@ class Classifier:
         self.LABELS = ['unknown', 'form_extension', 'line', 'ellipse', 'triangle', 'quadrangle', 'pentagon', 'hexagon']
         self.SUB_LABELS = ['circle']
         self.NUM_TO_SUB_LABEL = {3: 'triangle', 4: 'quadrangle', 5: 'pentagon', 6: 'hexagon'}
-
         self.peri = 0
         self.area = 0
 
+        if self.CNN_ON:
+            self._load_model()
+
+    def _load_model(self):
+        self.data_transforms = transforms.Compose([
+            transforms.Resize((128, 128)),
+            transforms.ToTensor()])
+
+        self.model = VGGRegNet()
+        self.model.eval()
+        self.model.load_state_dict({k.replace('module.', ''): v for k, v in
+                         torch.load(self.MODEL_PATH, map_location=lambda storage, loc: storage).items()})
 
     def detect_shape(self, trajectory):
         """
