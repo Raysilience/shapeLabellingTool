@@ -1,7 +1,7 @@
 #!usr/bin/env python
 # coding utf-8
 '''
-@File       :wukong.py
+@File       :risc.py
 @Copyright  :CV Group
 @Date       :9/8/2021
 @Author     :Rui
@@ -18,7 +18,10 @@ from core.trajectory import Trajectory
 from utils import ShapeUtil
 from configparser import ConfigParser
 
-class Wukong:
+class RISC:
+    """
+    Realtime Intelligent Sketch Classifier (RISC) is an online, efficient detector of hand-painted geometric shapes.
+    """
     def __init__(self):
         config = ConfigParser()
         config.read("config.ini")

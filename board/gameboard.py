@@ -17,7 +17,7 @@ from board.button import Button
 import pygame
 import sys
 
-from core.wukong import Wukong
+from core.risc import RISC
 from utils import FileUtil
 
 
@@ -29,7 +29,7 @@ class Gameboard:
         self.BLUE = (153, 153, 255)
         self.RED = (255, 0, 0)
 
-        self.wukong = Wukong()
+        self.risc = RISC()
         self.res = {'label': 'unknown', 'descriptor': [], 'line': []}
         self.points = []
         self.auto_label = True
@@ -200,7 +200,7 @@ class Gameboard:
                         elif event.type == pygame.MOUSEBUTTONUP:
                             self.res['line'].append(list(self.points))
                             if self.auto_label and len(self.points) > 2:
-                                response = self.wukong.detect(self.points)
+                                response = self.risc.detect(self.points)
                                 data = json.loads(response)
                                 label = data['label']
                                 sub_label = data['sub_label']
