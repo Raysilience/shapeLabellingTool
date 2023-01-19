@@ -11,4 +11,4 @@ Its UI is based on `pygame` and the auto-labelling algorithms mainly use `opencv
 
 ## Demo
 
-![](C:\Users\mrrui\Desktop\python_demo\whiteboard_python_demo\doc\labelling_tool.gif)
+![](doc\labelling_tool.gif)
