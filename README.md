@@ -10,3 +10,5 @@ Its UI is based on `pygame` and the auto-labelling algorithms mainly use `opencv
 5. Click vertices on the screen in a clockwise order to modify their positions.
 
 ## Demo
+
+![](C:\Users\mrrui\Desktop\python_demo\whiteboard_python_demo\doc\labelling_tool.gif)
