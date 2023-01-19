@@ -11,4 +11,4 @@ Its UI is based on `pygame` and the auto-labelling algorithms mainly use `opencv
 
 ## Demo
 
-![](doc\labelling_tool.gif)
+![](https://github.com/Raysilience/sketchLabellingTool/blob/whiteboard_labelling_tool/doc/labelling_tool.gif)
